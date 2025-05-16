@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Transliteration Test</title>
+</head>
+<body>
+    <h2>Transliteration Test</h2>
+    
+    <div>
+        <textarea id="inputText" rows="5" cols="40">नमस्ते</textarea>
+        <br>
+        <button id="transliterateBtn">Transliterate</button>
+        <br>
+        <textarea id="outputText" rows="5" cols="40" readonly></textarea>
+    </div>
+    
+    <script>
+        document.getElementById('transliterateBtn').addEventListener('click', function() {
+            const inputText = document.getElementById('inputText').value;
+            const outputText = document.getElementById('outputText');
+            
+            // Show loading state
+            this.textContent = 'Processing...';
+            this.disabled = true;
+            
+            // Call the backend API using fetch with more detailed error handling
+            fetch('http://127.0.0.1:5000/transliterate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    'input_text': inputText,
+                    'language': 'hindi'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                outputText.value = data.output || JSON.stringify(data);
+                this.textContent = 'Transliterate';
+                this.disabled = false;
+                console.log('Success:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                outputText.value = 'Error: ' + error.message;
+                this.textContent = 'Transliterate';
+                this.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

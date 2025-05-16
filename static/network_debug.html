@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Network Debug Tool</h1>
+    <p>Use this page to diagnose connection issues with your Flask backend</p>
+      <div>
+        <label for="endpoint">API Endpoint:</label>
+        <input type="text" id="endpoint" value="http://127.0.0.1:5000/transliterate" style="width: 300px;">
+        <button id="test-endpoint-btn" style="margin-left: 10px;">Test Simple Endpoint</button>
+    </div>
+    <div style="margin-top: 10px;">
+        <label for="input-text">Input Text:</label>
+        <input type="text" id="input-text" value="नमस्ते">
+    </div>
+    <div style="margin-top: 10px;">
+        <label for="language">Language:</label>
+        <select id="language">
+            <option value="hindi" selected>Hindi</option>
+            <option value="marathi">Marathi</option>
+            <option value="english">English</option>
+        </select>
+    </div>
+    <div style="margin-top: 10px;">
+        <button id="fetch-btn">Test with Fetch API</button>
+        <button id="xhr-btn">Test with XMLHttpRequest</button>
+    </div>
+    
+    <div id="result">Results will appear here...</div>
+      <script>
+        document.getElementById('test-endpoint-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing simple diagnostic endpoint...</p>';
+            
+            fetch('http://127.0.0.1:5000/api/test')
+                .then(response => {
+                    resultDiv.innerHTML += `<p>Response status: ${response.status} ${response.statusText}</p>`;
+                    return response.json();
+                })
+                .then(data => {
+                    resultDiv.innerHTML += '<p class="success">Success! Response from test endpoint:</p>';
+                    resultDiv.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                })
+                .catch(error => {
+                    resultDiv.innerHTML += `<p class="error">Error with test endpoint: ${error.message}</p>`;
+                    console.error('Test endpoint error:', error);
+                });
+        });
+        
+        document.getElementById('fetch-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            const endpoint = document.getElementById('endpoint').value;
+            const inputText = document.getElementById('input-text').value;
+            const language = document.getElementById('language').value;
+            
+            resultDiv.innerHTML = '<p>Testing connection with Fetch API...</p>';
+            resultDiv.innerHTML += `<p>Endpoint: ${endpoint}</p>`;
+            resultDiv.innerHTML += `<p>Input: ${inputText}</p>`;
+            resultDiv.innerHTML += `<p>Language: ${language}</p>`;
+            
+            // Create parameters
+            const params = new URLSearchParams();
+            params.append('input_text', inputText);
+            params.append('language', language);
+            
+            // Log the request details
+            console.log('Request details:', {
+                url: endpoint,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: params.toString()
+            });
+            
+            // Make the request
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: params
+            })
+            .then(response => {
+                resultDiv.innerHTML += `<p>Response status: ${response.status} ${response.statusText}</p>`;
+                resultDiv.innerHTML += '<p>Response headers:</p><pre>' + 
+                    JSON.stringify(Object.fromEntries([...response.headers.entries()]), null, 2) + '</pre>';
+                
+                return response.json();
+            })
+            .then(data => {
+                resultDiv.innerHTML += '<p class="success">Success! Response data:</p>';
+                resultDiv.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                resultDiv.innerHTML += `<p class="error">Error: ${error.message}</p>`;
+                resultDiv.innerHTML += '<p>Error details:</p>';
+                resultDiv.innerHTML += `<pre>${error.stack || 'No stack trace available'}</pre>`;
+                console.error('Fetch error:', error);
+            });
+        });
+        
+        document.getElementById('xhr-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            const endpoint = document.getElementById('endpoint').value;
+            const inputText = document.getElementById('input-text').value;
+            const language = document.getElementById('language').value;
+            
+            resultDiv.innerHTML = '<p>Testing connection with XMLHttpRequest...</p>';
+            resultDiv.innerHTML += `<p>Endpoint: ${endpoint}</p>`;
+            resultDiv.innerHTML += `<p>Input: ${inputText}</p>`;
+            resultDiv.innerHTML += `<p>Language: ${language}</p>`;
+            
+            // Create parameters
+            const params = new URLSearchParams();
+            params.append('input_text', inputText);
+            params.append('language', language);
+            
+            // Make the request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', endpoint, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.setRequestHeader('Accept', 'application/json');
+            
+            xhr.onload = function() {
+                resultDiv.innerHTML += `<p>Response status: ${xhr.status} ${xhr.statusText}</p>`;
+                resultDiv.innerHTML += '<p>Response headers:</p><pre>' + xhr.getAllResponseHeaders() + '</pre>';
+                
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        resultDiv.innerHTML += '<p class="success">Success! Response data:</p>';
+                        resultDiv.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    } catch (e) {
+                        resultDiv.innerHTML += `<p class="error">Error parsing JSON: ${e.message}</p>`;
+                        resultDiv.innerHTML += '<p>Raw response:</p><pre>' + xhr.responseText + '</pre>';
+                    }
+                } else {
+                    resultDiv.innerHTML += `<p class="error">HTTP Error: ${xhr.status}</p>`;
+                    resultDiv.innerHTML += '<p>Response:</p><pre>' + xhr.responseText + '</pre>';
+                }
+            };
+            
+            xhr.onerror = function() {
+                resultDiv.innerHTML += '<p class="error">Network Error</p>';
+                resultDiv.innerHTML += '<p>The request could not be completed. This usually indicates a network connectivity issue or CORS problem.</p>';
+                console.error('XHR error:', xhr);
+            };
+            
+            xhr.send(params.toString());
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Transliteration History - indicode{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- History Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="fw-bold">Transliteration History</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">History</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-history me-2"></i>Your Transliteration History</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-danger" onclick="showPremiumAlert()">
+                    <i class="fas fa-trash-alt me-2"></i>Clear History
+                </button>
+                <button class="btn btn-sm btn-outline-primary ms-2" onclick="showPremiumAlert()">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if history %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Date & Time</th>
+                            <th scope="col">Input Text</th>
+                            <th scope="col">Output Text</th>
+                            <th scope="col">Language</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history %}
+                        <tr>
+                            <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="text-truncate" style="max-width: 200px;">{{ item.input_text }}</td>
+                            <td class="text-truncate" style="max-width: 200px;">{{ item.output_text }}</td>
+                            <td><span class="badge bg-primary">{{ item.language }}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" data-text="{{ item.output_text }}">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info ms-1 reuse-btn" 
+                                        data-input="{{ item.input_text }}" 
+                                        data-output="{{ item.output_text }}"
+                                        data-language="{{ item.language }}">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No History Found</h5>
+                <p class="text-muted mb-3">You haven't made any transliterations yet.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Start Transliteration</a>
+            </div>
+            {% endif %}
+        </div>
+        {% if history and history|length > 10 %}
+        <div class="card-footer bg-white p-3">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Premium Feature Upsell -->
+    <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="fw-bold mb-2"><i class="fas fa-crown text-warning me-2"></i>Unlock Advanced History Features</h4>
+                    <p class="mb-md-0">Upgrade to Premium to get unlimited history storage, advanced filtering, data visualization, and more.</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <button onclick="showPremiumAlert()" class="btn btn-warning">
+                        <i class="fas fa-crown me-2"></i>Upgrade to Premium
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reuse Modal -->
+<div class="modal fade" id="reuseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reuse Transliteration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <select id="modal-language" class="form-select">
+                                <option value="hindi" selected>Hindi</option>
+                                <option value="bengali" disabled>Bengali (Coming Soon)</option>
+                                <option value="tamil" disabled>Tamil (Coming Soon)</option>
+                            </select>
+                            <label for="modal-language">Input Language</label>
+                        </div>                        <label for="modal-input" class="form-label">Input Text</label>
+                        <div>
+                            <textarea id="modal-input" class="form-control" style="height: 200px;"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <select id="modal-output-language" class="form-select" disabled>
+                                <option value="english" selected>English</option>
+                            </select>
+                            <label for="modal-output-language">Output Language</label>
+                        </div>                        <label for="modal-output" class="form-label">Transliterated Text</label>
+                        <div>
+                            <textarea id="modal-output" class="form-control" style="height: 200px;" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="modal-edit-btn" class="btn btn-primary">Edit & Transliterate</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy button functionality
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.getAttribute('data-text');
+                navigator.clipboard.writeText(text).then(() => {
+                    // Visual feedback
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                    }, 1500);
+                });
+            });
+        });
+
+        // Reuse button functionality
+        const reuseModal = new bootstrap.Modal(document.getElementById('reuseModal'));
+        document.querySelectorAll('.reuse-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const inputText = this.getAttribute('data-input');
+                const outputText = this.getAttribute('data-output');
+                const language = this.getAttribute('data-language');
+                
+                document.getElementById('modal-input').value = inputText;
+                document.getElementById('modal-output').value = outputText;
+                document.getElementById('modal-language').value = language;
+                
+                reuseModal.show();
+            });
+        });
+
+        // Edit & Transliterate button
+        document.getElementById('modal-edit-btn').addEventListener('click', function() {
+            reuseModal.hide();
+            
+            // Redirect to dashboard with the input text
+            const input = document.getElementById('modal-input').value;
+            sessionStorage.setItem('transliterate_input', input);
+            sessionStorage.setItem('transliterate_language', document.getElementById('modal-language').value);
+            
+            window.location.href = "{{ url_for('dashboard') }}";
+        });
+    });
+</script>
+{% endblock %}

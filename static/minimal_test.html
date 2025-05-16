@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Transliteration Test</title>
+</head>
+<body>
+    <h2>Minimal Transliteration Test</h2>
+    
+    <div>
+        <input type="text" id="inputText" value="नमस्ते">
+        <button id="transliterateBtn">Transliterate</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('transliterateBtn').addEventListener('click', function() {
+                const inputText = document.getElementById('inputText').value;
+                const resultDiv = document.getElementById('result');
+                
+                resultDiv.innerHTML = 'Sending request...';
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('input_text', inputText);
+                formData.append('language', 'hindi');
+                
+                // Send POST request using XMLHttpRequest
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://127.0.0.1:5000/transliterate', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            resultDiv.innerHTML = `Success! Output: ${response.output}`;
+                        } catch(e) {
+                            resultDiv.innerHTML = `Error parsing response: ${e}`;
+                        }
+                    } else {
+                        resultDiv.innerHTML = `Error: ${xhr.status} - ${xhr.statusText}`;
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    resultDiv.innerHTML = 'Network error occurred. Check console for details.';
+                    console.error('Network Error:', xhr);
+                };
+                
+                // Convert FormData to URL encoded string
+                const params = new URLSearchParams();
+                params.append('input_text', inputText);
+                params.append('language', 'hindi');
+                
+                xhr.send(params.toString());
+            });
+        });
+    </script>
+</body>
+</html>
