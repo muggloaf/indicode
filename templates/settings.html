@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Settings - indicode{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Settings Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="fw-bold">Account Settings</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Settings</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Settings Navigation -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                            <i class="fas fa-user-circle me-2"></i>Profile
+                        </a>
+                        <a href="#password" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-lock me-2"></i>Change Password
+                        </a>
+                        <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-sliders-h me-2"></i>Preferences
+                        </a>
+                        <a href="#subscription" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-crown me-2"></i>Subscription
+                        </a>
+                        <a href="#danger" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- Profile Settings -->
+                <div class="tab-pane fade show active" id="profile">
+                    <div class="card border-0 shadow">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-user-circle me-2"></i>Profile Settings</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form>
+                                <div class="mb-4 text-center">
+                                    <div class="position-relative d-inline-block">
+                                        <img src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=random&size=100" class="rounded-circle img-thumbnail" style="width: 100px; height: 100px;" alt="Profile Avatar">
+                                        <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle p-2" onclick="showPremiumAlert()">
+                                            <i class="fas fa-camera"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="fullName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="fullName" value="{{ current_user.name }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" value="{{ current_user.email }}" readonly>
+                                    <div class="form-text">Email cannot be changed</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="memberSince" class="form-label">Member Since</label>
+                                    <input type="text" class="form-control" id="memberSince" value="May 6, 2025" readonly>
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-primary" onclick="showSavedAlert()">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password Settings -->
+                <div class="tab-pane fade" id="password">
+                    <div class="card border-0 shadow">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-lock me-2"></i>Change Password</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form>
+                                <div class="mb-3">
+                                    <label for="currentPassword" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="currentPassword">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="newPassword">
+                                    <div class="form-text">Password must be at least 8 characters long</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirmPassword">
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-primary" onclick="showSavedAlert()">Update Password</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences -->
+                <div class="tab-pane fade" id="preferences">
+                    <div class="card border-0 shadow">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-sliders-h me-2"></i>Preferences</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label">Default Input Language</label>
+                                    <select class="form-select">
+                                        <option value="hindi" selected>Hindi</option>
+                                        <option value="bengali" disabled>Bengali (Coming Soon)</option>
+                                        <option value="tamil" disabled>Tamil (Coming Soon)</option>
+                                        <option value="telugu" disabled>Telugu (Coming Soon)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Theme</label>
+                                    <select class="form-select" disabled>
+                                        <option value="light" selected>Light</option>
+                                        <option value="dark">Dark</option>
+                                        <option value="system">System Default</option>
+                                    </select>
+                                    <div class="form-text text-muted">Premium feature</div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label d-block">Notification Preferences</label>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                                        <label class="form-check-label" for="emailNotif">Email Notifications</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="newsUpdates" checked>
+                                        <label class="form-check-label" for="newsUpdates">Product Updates and News</label>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-primary" onclick="showSavedAlert()">Save Preferences</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription -->
+                <div class="tab-pane fade" id="subscription">
+                    <div class="card border-0 shadow">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-crown me-2"></i>Subscription</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="alert alert-info mb-4">
+                                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Current Plan</h5>
+                                <p class="mb-0">You are currently on the <strong>Free Plan</strong>. Upgrade to Premium to unlock all features.</p>
+                            </div>
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-header bg-white py-3">
+                                            <h5 class="card-title mb-0">Free</h5>
+                                            <p class="text-muted mb-0">Current Plan</p>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="display-6 mb-3">$0 <span class="fs-6 text-muted">/month</span></div>
+                                            <ul class="list-unstyled mb-4">
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Basic transliteration features</li>
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>History tracking (last 10 entries)</li>
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Translation API access</li>
+                                                <li class="mb-2 text-muted"><i class="fas fa-times text-danger me-2"></i>Batch processing</li>
+                                                <li class="mb-2 text-muted"><i class="fas fa-times text-danger me-2"></i>Advanced analytics</li>
+                                                <li class="mb-2 text-muted"><i class="fas fa-times text-danger me-2"></i>Export tools</li>
+                                            </ul>
+                                            <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm border-warning">
+                                        <div class="card-header bg-warning text-white py-3">
+                                            <h5 class="card-title mb-0">Premium</h5>
+                                            <p class="mb-0">Recommended</p>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="display-6 mb-3">$9.99 <span class="fs-6 text-muted">/month</span></div>
+                                            <ul class="list-unstyled mb-4">
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>All Free features</li>
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited history</li>
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Batch processing</li>
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Advanced analytics</li>
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Export tools (PDF, DOCX, etc.)</li>
+                                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Priority support</li>
+                                            </ul>
+                                            <button class="btn btn-warning w-100" onclick="showPremiumAlert()">Upgrade Now</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="tab-pane fade" id="danger">
+                    <div class="card border-0 shadow">
+                        <div class="card-header bg-danger text-white py-3">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-4">
+                                <h5>Delete All History</h5>
+                                <p class="text-muted">This action will permanently delete all your transliteration history. This cannot be undone.</p>
+                                <button class="btn btn-outline-danger" onclick="showConfirmAlert('Are you sure you want to delete all history? This action cannot be undone.')">Delete All History</button>
+                            </div>
+                            <hr>
+                            <div>
+                                <h5>Delete Account</h5>
+                                <p class="text-muted">Once you delete your account, there is no going back. Please be certain.</p>
+                                <button class="btn btn-danger" onclick="showConfirmAlert('Are you sure you want to delete your account? All of your data will be permanently removed. This action cannot be undone.')">Delete Account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle tab navigation via URL hash
+        const hash = window.location.hash;
+        if (hash) {
+            const tab = document.querySelector(`a[href="${hash}"]`);
+            if (tab) {
+                new bootstrap.Tab(tab).show();
+            }
+        }
+        
+        // Update URL when tabs are changed
+        const tabs = document.querySelectorAll('[data-bs-toggle="list"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (e) {
+                window.location.hash = e.target.hash;
+            });
+        });
+    });
+    
+    function showSavedAlert() {
+        alert('Changes saved successfully!');
+    }
+    
+    function showConfirmAlert(message) {
+        if (confirm(message)) {
+            alert('Operation completed successfully!');
+        }
+    }
+</script>
+{% endblock %}

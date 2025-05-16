@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .test-box {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            min-height: 50px;
+            background-color: #f9f9f9;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Test Page</h1>
+    <div class="container">
+        <div class="test-box">
+            <h2>1. Test API Connection (GET)</h2>
+            <p>Tests connection to the /api/test endpoint with a GET request.</p>
+            <button id="test1">Run Test</button>
+            <div id="result1" class="result">Results will appear here...</div>
+        </div>
+
+        <div class="test-box">
+            <h2>2. Test API Connection (POST)</h2>
+            <p>Tests connection to the /api/test endpoint with a POST request.</p>
+            <button id="test2">Run Test</button>
+            <div id="result2" class="result">Results will appear here...</div>
+        </div>
+
+        <div class="test-box">
+            <h2>3. Test Transliteration API (XMLHttpRequest)</h2>
+            <p>Tests the /transliterate endpoint using XMLHttpRequest.</p>
+            <input type="text" id="inputText" value="नमस्ते" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <button id="test3">Run Test</button>
+            <div id="result3" class="result">Results will appear here...</div>
+        </div>
+
+        <div class="test-box">
+            <h2>4. Test Transliteration API (Fetch API)</h2>
+            <p>Tests the /transliterate endpoint using Fetch API.</p>
+            <input type="text" id="inputText2" value="नमस्ते" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <button id="test4">Run Test</button>
+            <div id="result4" class="result">Results will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: GET request to /api/test
+        document.getElementById('test1').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result1');
+            resultDiv.innerHTML = 'Sending GET request...';
+            
+            fetch('http://127.0.0.1:5000/api/test')
+                .then(response => {
+                    resultDiv.innerHTML = `Response status: ${response.status} ${response.statusText}<br>`;
+                    return response.json();
+                })
+                .then(data => {
+                    resultDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `Error: ${error.message}`;
+                    console.error('Test 1 error:', error);
+                });
+        });
+        
+        // Test 2: POST request to /api/test
+        document.getElementById('test2').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result2');
+            resultDiv.innerHTML = 'Sending POST request...';
+            
+            fetch('http://127.0.0.1:5000/api/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'test_data=hello'
+            })
+                .then(response => {
+                    resultDiv.innerHTML = `Response status: ${response.status} ${response.statusText}<br>`;
+                    return response.json();
+                })
+                .then(data => {
+                    resultDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `Error: ${error.message}`;
+                    console.error('Test 2 error:', error);
+                });
+        });
+        
+        // Test 3: Transliteration API using XMLHttpRequest
+        document.getElementById('test3').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result3');
+            const inputText = document.getElementById('inputText').value;
+            resultDiv.innerHTML = 'Sending XMLHttpRequest...';
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://127.0.0.1:5000/transliterate', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    resultDiv.innerHTML = `Response status: ${xhr.status}<br>`;
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        resultDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    } catch (e) {
+                        resultDiv.innerHTML += `Error parsing JSON: ${e.message}<br>Raw response: ${xhr.responseText}`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `Error: ${xhr.status} ${xhr.statusText}<br>Response: ${xhr.responseText}`;
+                }
+            };
+            
+            xhr.onerror = function() {
+                resultDiv.innerHTML = 'Network Error';
+                console.error('XHR error:', xhr);
+            };
+            
+            xhr.send(`input_text=${encodeURIComponent(inputText)}&language=hindi`);
+        });
+        
+        // Test 4: Transliteration API using Fetch
+        document.getElementById('test4').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result4');
+            const inputText = document.getElementById('inputText2').value;
+            resultDiv.innerHTML = 'Sending Fetch request...';
+            
+            fetch('http://127.0.0.1:5000/transliterate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `input_text=${encodeURIComponent(inputText)}&language=hindi`
+            })
+                .then(response => {
+                    resultDiv.innerHTML = `Response status: ${response.status} ${response.statusText}<br>`;
+                    return response.json();
+                })
+                .then(data => {
+                    resultDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `Error: ${error.message}`;
+                    console.error('Test 4 error:', error);
+                });
+        });
+    </script>
+</body>
+</html>

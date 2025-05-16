@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - indicode{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="fw-bold">Dashboard</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-primary text-white mb-4 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Indicodes Today</h5>
+                            <h2 class="mt-3 mb-0">{{ history|selectattr('created_at', 'ge', now().replace(hour=0, minute=0, second=0))|list|length }}</h2>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-25 rounded-circle">
+                            <i class="fas fa-sync-alt fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-success text-white mb-4 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Total Indicodes</h5>
+                            <h2 class="mt-3 mb-0">{{ history|length }}</h2>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-25 rounded-circle">
+                            <i class="fas fa-history fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-info text-white mb-4 shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Account Type</h5>
+                            <h2 class="mt-3 mb-0">Free</h2>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-25 rounded-circle">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Indicode Tool -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-language me-2"></i>Quick Transliterate</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select id="input-language" class="form-select">
+                                    <option value="hindi" selected>Hindi</option>
+                                    <option value="marathi">Marathi</option>
+                                    <option value="english">English</option>
+                                </select>
+                                <label for="input-language">Input Language</label>
+                            </div>                            <label for="input-text" class="form-label">Enter Text to Transliterate</label>
+                            <div>
+                                <textarea id="input-text" class="form-control" style="height: 150px;"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-3 mt-md-0">
+                            <div class="form-floating mb-3">
+                                <select id="output-language" class="form-select">
+                                    <option value="english" selected>English</option>
+                                    <option value="hindi">Hindi</option>
+                                    <option value="marathi">Marathi</option>
+                                </select>
+                                <label for="output-language">Output Language</label>
+                            </div>                            <label for="output-text" class="form-label" id="output-label">Transliterated Text</label>
+                            <div>
+                                <textarea id="output-text" class="form-control" style="height: 150px;" readonly></textarea>
+                            </div>
+                            <div class="mt-3">
+                                <button id="copy-btn" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-copy me-1"></i>Copy
+                                </button>
+                                <button id="download-btn" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button id="transliterate-btn" class="btn btn-primary px-4">
+                            <i class="fas fa-sync-alt me-2"></i>Transliterate
+                        </button>
+                        <button id="translate-btn" class="btn btn-success px-4 ms-2" style="display: inline-block !important; visibility: visible !important; opacity: 1 !important;">
+                            <i class="fas fa-language me-2"></i>Translate
+                        </button>
+                        <button id="clear-btn" class="btn btn-outline-secondary px-4 ms-2">
+                            <i class="fas fa-eraser me-2"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for item in history[:5] %}
+                        <div class="list-group-item p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-truncate" style="max-width: 200px;">{{ item.input_text[:20] }}{% if item.input_text|length > 20 %}...{% endif %}</h6>
+                                    <p class="mb-0 text-muted small">{{ item.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+                                </div>
+                                <span class="badge bg-primary">{{ item.language }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="list-group-item p-4 text-center">
+                            <p class="mb-0 text-muted">No recent activity</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center">
+                    <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-primary">View All History</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Features (Greyed Out) -->
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-crown me-2 text-warning"></i>Premium Features</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
+                                <div class="card-body p-4 text-center">
+                                    <div class="feature-icon text-primary mb-3">
+                                        <i class="fas fa-file-import fa-3x"></i>
+                                    </div>
+                                    <h5 class="card-title text-muted">Batch Processing</h5>
+                                    <p class="card-text text-muted small">Upload multiple files and process them in one go. Save time with bulk operations.</p>
+                                    <button onclick="showPremiumAlert()" class="btn btn-sm btn-outline-secondary" disabled>Upgrade to Use</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
+                                <div class="card-body p-4 text-center">
+                                    <div class="feature-icon text-primary mb-3">
+                                        <i class="fas fa-chart-line fa-3x"></i>
+                                    </div>
+                                    <h5 class="card-title text-muted">Advanced Analytics</h5>
+                                    <p class="card-text text-muted small">Get detailed insights into your indicode usage patterns and statistics.</p>
+                                    <button onclick="showPremiumAlert()" class="btn btn-sm btn-outline-secondary" disabled>Upgrade to Use</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
+                                <div class="card-body p-4 text-center">
+                                    <div class="feature-icon text-primary mb-3">
+                                        <i class="fas fa-cloud-download-alt fa-3x"></i>
+                                    </div>
+                                    <h5 class="card-title text-muted">Export Tools</h5>
+                                    <p class="card-text text-muted small">Export your indicodes in various formats including PDF, DOCX, and more.</p>
+                                    <button onclick="showPremiumAlert()" class="btn btn-sm btn-outline-secondary" disabled>Upgrade to Use</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center">
+                    <a href="#" onclick="showPremiumAlert()" class="btn btn-warning">
+                        <i class="fas fa-crown me-2"></i>Upgrade to Premium
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputText = document.getElementById('input-text');
+        const outputText = document.getElementById('output-text');
+        const translateBtn = document.getElementById('translate-btn');
+        const transliterateBtn = document.getElementById('transliterate-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const inputLanguageSelect = document.getElementById('input-language');
+        const outputLanguageSelect = document.getElementById('output-language');
+
+        // Check if there's stored input from history
+        if (sessionStorage.getItem('transliterate_input')) {
+            inputText.value = sessionStorage.getItem('transliterate_input');
+            if (sessionStorage.getItem('transliterate_language')) {
+                inputLanguageSelect.value = sessionStorage.getItem('transliterate_language');
+            }
+            sessionStorage.removeItem('transliterate_input');
+            sessionStorage.removeItem('transliterate_language');
+        }
+
+        // Transliteration functionality
+        transliterateBtn.addEventListener('click', function() {
+            const text = inputText.value.trim();
+            if (!text) {
+                alert('Please enter some text to transliterate.');
+                return;
+            }
+
+            // Show loading effect
+            transliterateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            transliterateBtn.disabled = true;            // Call the transliterate API - using absolute URL for reliability
+            fetch('http://127.0.0.1:5000/transliterate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    'input_text': text,
+                    'language': inputLanguageSelect.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {                outputText.value = data.output;
+                document.getElementById('output-label').textContent = 'Transliterated Text';
+                transliterateBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Transliterate';
+                transliterateBtn.disabled = false;
+                
+                // No longer refreshing the page to prevent clearing inputs
+                // setTimeout(() => window.location.reload(), 1500);
+            })            .catch(error => {
+                console.error('Error:', error);
+                // More descriptive error message
+                if (error.message && error.message.includes('Failed to fetch')) {
+                    alert('Failed to connect to server. Please check your network connection and make sure the server is running at http://127.0.0.1:5000');
+                } else {
+                    alert('An error occurred during transliteration: ' + error.message);
+                }
+                transliterateBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Transliterate';
+                transliterateBtn.disabled = false;
+            });
+        });
+
+        // Translation functionality
+        translateBtn.addEventListener('click', function() {
+            const text = inputText.value.trim();
+            if (!text) {
+                alert('Please enter some text to translate.');
+                return;
+            }
+
+            // Show loading effect
+            translateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Translating...';
+            translateBtn.disabled = true;
+
+            // Call the translation API
+            fetch('/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'input_text': text,
+                    'source_lang': 'hi',
+                    'target_lang': 'en'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {                if (data.error) {
+                    alert('Translation error: ' + data.error);
+                } else {                    outputText.value = data.translation;
+                    document.getElementById('output-label').textContent = 'Translated Text';
+                }
+                translateBtn.innerHTML = '<i class="fas fa-language me-2"></i>Translate';
+                translateBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during translation.');
+                translateBtn.innerHTML = '<i class="fas fa-language me-2"></i>Translate';
+                translateBtn.disabled = false;
+            });
+        });
+        
+        // Clear button functionality
+        clearBtn.addEventListener('click', function() {
+            inputText.value = '';
+            outputText.value = '';
+            document.getElementById('output-label').textContent = 'Transliterated Text';
+            inputText.focus();
+        });
+
+        // Copy button functionality
+        copyBtn.addEventListener('click', function() {
+            if (!outputText.value) {
+                alert('No text to copy.');
+                return;
+            }
+            
+            outputText.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        });
+
+        // Disable download button (premium feature)
+        document.getElementById('download-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            showPremiumAlert();
+        });
+    });
+
+    // Premium alert function
+    function showPremiumAlert() {
+        alert('This feature is available only in the premium version. Please upgrade to access it.');
+    }
+</script>
+{% endblock %}

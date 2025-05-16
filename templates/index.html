@@ -1,0 +1,535 @@
+{% extends 'base.html' %}
+
+{% block title %}indicode - Hindi, Marathi to English Transliteration{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <h1 class="display-4 fw-bold mb-4">Hindi & Marathi to English Transliteration</h1>
+                <p class="lead mb-4">Easy-to-use transliteration tool that converts Hindi and Marathi text to English. Perfect for documents, emails, and social media.</p>
+                
+                <div class="d-grid gap-2 d-md-flex mb-4">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4">Sign Up</a>
+                </div>
+                <a href="#indicate-section" class="text-decoration-none">Continue as guest</a>            </div>
+            <div class="col-lg-6 text-center text-lg-end">
+                <div class="card border-0 shadow-lg p-4" style="max-width: 378px; margin-left: auto; margin-right: 20px;">
+                    <div class="mb-2">
+                        <span class="badge bg-success mb-2">Reliable</span>
+                    </div>
+                    <h3 class="display-6 fw-bold text-primary">89%</h3>
+                    <p class="lead">Accuracy Rate</p>
+                    <p class="text-muted">Based on our testing metrics</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Transliteration Tool Section -->
+<section id="indicate-section" class="py-5">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Try Transliteration</h2>
+            <p class="lead text-muted">Experience fast and accurate transliteration right now</p>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card border-0 shadow">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row">
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="guest-input-language">
+                                        <option value="hindi" selected>Hindi</option>
+                                        <option value="marathi">Marathi</option>
+                                        <option value="english">English</option>
+                                    </select>
+                                    <label for="guest-input-language">Input Language</label>                                
+                                </div>   
+                                <label for="guest-input-text" class="form-label">Input Text</label>                             
+                                <div class="form-floating">
+                                    <textarea class="form-control" id="guest-input-text" style="height: 180px;"></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <small class="text-muted">Type or paste your text</small>
+                                    <small class="text-muted">Max 500 characters</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="guest-output-language">
+                                        <option value="english" selected>English</option>
+                                        <option value="hindi" disabled>Hindi (Coming Soon)</option>
+                                        <option value="marathi" disabled>Marathi (Coming Soon)</option>
+                                    </select>
+                                    <label for="guest-output-language">Output Language</label>                                
+                                </div>                                <label for="guest-output-text" class="form-label" id="guest-output-label">Output Text</label>                         
+                                <div class="form-floating">
+                                    <textarea class="form-control" id="guest-output-text" style="height: 180px;" readonly></textarea>
+                                </div>
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary me-2" id="guest-copy-btn">
+                                        <i class="fas fa-copy me-1"></i>Copy
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" id="guest-login-prompt">
+                                        <i class="fas fa-save me-1"></i>Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                          <div class="mt-4">
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <a class="text-decoration-none" data-bs-toggle="collapse" href="#advancedOptions" role="button" aria-expanded="false" aria-controls="advancedOptions">
+                                        <i class="fas fa-cog me-1"></i> Advanced Options
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="collapse mb-4" id="advancedOptions">
+                                <div class="card card-body">
+                                    <h6 class="mb-3">Transliteration Features</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="context-aware-switch" checked>
+                                                <label class="form-check-label" for="context-aware-switch">Context-Aware Transliteration</label>
+                                                <small class="d-block text-muted">Improves accuracy based on surrounding words</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="statistical-schwa-switch" checked>
+                                                <label class="form-check-label" for="statistical-schwa-switch">Schwa Detection</label>
+                                                <small class="d-block text-muted">Intelligently removes inherent vowels</small>
+                                            </div></div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-exceptions-switch" checked>
+                                                <label class="form-check-label" for="auto-exceptions-switch">Automatic Exception Detection</label>
+                                                <small class="d-block text-muted">Identifies and handles special cases</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-capitalization-switch" checked>
+                                                <label class="form-check-label" for="auto-capitalization-switch">Auto Capitalization</label>
+                                                <small class="d-block text-muted">Capitalizes sentences, names, and titles</small>
+                                            </div>
+                                        </div>                                    </div>
+                                    <div class="mt-3" id="feedback-container" style="display: none;">                                        <h6 class="mb-2">Apply Edits to Your Transliteration</h6>
+                                        <div class="feedback-form-wrapper">                                            <label for="corrected-text" class="form-label">Your Improved Transliteration</label>
+                                            <div>
+                                                <textarea class="form-control" id="corrected-text" style="height: 80px;"></textarea>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary" id="submit-feedback">
+                                                <i class="fas fa-paper-plane me-1"></i>Submit Correction
+                                            </button>
+                                            <small class="d-block text-muted mt-1">Help us improve by suggesting better transliterations</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="text-center">
+                                <button class="btn btn-primary btn-lg px-4" id="guest-transliterate-btn">
+                                    <i class="fas fa-sync-alt me-2"></i>Transliterate
+                                </button>
+                                <button class="btn btn-success btn-lg px-4 ms-2" id="guest-translate-btn" style="display: inline-block !important; visibility: visible !important; opacity: 1 !important;">
+                                    <i class="fas fa-language me-2"></i>Translate
+                                </button>
+                                <button class="btn btn-outline-secondary btn-lg px-4 ms-2" id="guest-clear-btn">
+                                    <i class="fas fa-eraser me-2"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Why Use Our Tool?</h2>
+            <p class="lead text-muted">Advanced features designed for perfect transliteration</p>
+        </div>
+        
+        <div class="row g-4 row-cols-1 row-cols-md-4">
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-brain fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Context-Aware</h5>
+                        <p class="card-text text-muted">Intelligently analyzes surrounding words to improve accuracy based on context.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-chart-bar fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Schwa Detection</h5>
+                        <p class="card-text text-muted">Advanced system for detecting and removing silent vowels for natural pronunciation.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-lightbulb fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Auto-Exceptions</h5>
+                        <p class="card-text text-muted">Automatically detects and handles special cases and exceptions.</p>
+                    </div>                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-font fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Auto Capitalization</h5>
+                        <p class="card-text text-muted">Intelligently capitalizes sentences, names, and titles for proper formatting.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+          <div class="row g-4 row-cols-1 row-cols-md-4 mt-2">
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-bolt fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Fast & Accurate</h5>
+                        <p class="card-text text-muted">Get transliterations in real-time with high accuracy levels for Hindi and Marathi.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-history fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">History Tracking</h5>
+                        <p class="card-text text-muted">All your transliterations are saved so you can access them anytime you want.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-globe fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Multiple Languages</h5>
+                        <p class="card-text text-muted">Support for Hindi and Marathi, with more languages coming soon.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-comment-alt fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Community Feedback</h5>
+                        <p class="card-text text-muted">Continuously improving through user corrections and feedback to handle exceptions perfectly.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="py-5">
+    <div class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-lg-12">
+                <h2 class="fw-bold mb-4">About indicode</h2>
+                <p class="lead mb-4">We've developed a transliteration engine that makes it easy to convert text between languages while preserving the phonetic sounds.</p>
+                
+                <p class="mb-4">indicode is built for students, professionals, and anyone who needs to convert Hindi or Marathi text to English. Our tool is specifically designed to handle the nuances of Indian languages.</p>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="me-4">
+                        <span class="d-inline-block text-primary">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Accurate Character Mapping</h5>
+                        <p class="mb-0 text-muted">Our system is built on comprehensive character mappings for accurate results.</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="me-4">
+                        <span class="d-inline-block text-primary">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Regular Updates</h5>
+                        <p class="mb-0 text-muted">We continuously improve our transliteration models for better results.</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <div class="me-4">
+                        <span class="d-inline-block text-primary">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Privacy-Focused</h5>
+                        <p class="mb-0 text-muted">Your data is yours - we don't store guest transliterations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5 bg-light">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">What Users Say</h2>
+            <p class="lead text-muted">Feedback from our community of users</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm testimonial-card">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-quote-left fa-2x text-primary opacity-50"></i>
+                        </div>
+                        <p class="mb-4">This tool has been helpful for transliterating my Hindi documents. The interface is straightforward and easy to use.</p>
+                        <div class="d-flex align-items-center">
+                            <div class="ms-3">
+                                <h6 class="fw-bold mb-0">Rahul S.</h6>
+                                <p class="text-muted small mb-0">College Student</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm testimonial-card">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-quote-left fa-2x text-primary opacity-50"></i>
+                        </div>
+                        <p class="mb-4">I use this for quick conversions of text messages. The results are good and it saves me time when communicating with English-speaking colleagues.</p>
+                        <div class="d-flex align-items-center">
+                            <div class="ms-3">
+                                <h6 class="fw-bold mb-0">Priya M.</h6>
+                                <p class="text-muted small mb-0">Business Owner</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm testimonial-card">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-quote-left fa-2x text-primary opacity-50"></i>
+                        </div>
+                        <p class="mb-4">The history feature helps me keep track of all my previous transliterations. Nice tool for regular use.</p>
+                        <div class="d-flex align-items-center">
+                            <div class="ms-3">
+                                <h6 class="fw-bold mb-0">Vikram J.</h6>
+                                <p class="text-muted small mb-0">Content Writer</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="fw-bold mb-4">Ready to Get Started?</h2>
+                <p class="lead mb-4">Create an account to save your transliterations and access all features</p>
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3 mb-3">Sign Up Now</a>
+                <p><small class="text-muted">No credit card required</small></p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputText = document.getElementById('guest-input-text');
+        const outputText = document.getElementById('guest-output-text');
+        const transliterateBtn = document.getElementById('guest-transliterate-btn');
+        const translateBtn = document.getElementById('guest-translate-btn');
+        const clearBtn = document.getElementById('guest-clear-btn');
+        const copyBtn = document.getElementById('guest-copy-btn');
+        const loginPrompt = document.getElementById('guest-login-prompt');
+        const inputLanguage = document.getElementById('guest-input-language');
+        const outputLabel = document.getElementById('guest-output-label');
+        
+        // Transliterate functionality
+        transliterateBtn.addEventListener('click', function() {
+            const text = inputText.value.trim();
+            if (!text) {
+                alert('Please enter some text to transliterate.');
+                return;
+            }
+            
+            // Show loading state
+            transliterateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            transliterateBtn.disabled = true;
+              // Call the backend API - use absolute URL to avoid path issues
+            fetch('http://127.0.0.1:5000/transliterate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    'input_text': text,
+                    'language': inputLanguage.value
+                })
+            })
+            .then(response => response.json())            .then(data => {                outputText.value = data.output;
+                document.getElementById('guest-output-label').textContent = 'Transliterated Text';
+                transliterateBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Transliterate';
+                transliterateBtn.disabled = false;
+            })            .catch(error => {
+                console.error('Error:', error);
+                // More detailed error handling with debugging information
+                if (error.message && error.message.includes('Failed to fetch')) {
+                    console.log('Network error details:', error);
+                    alert('Failed to connect to server. Please check your network connection and make sure the server is running at http://127.0.0.1:5000');
+                } else {
+                    console.log('API error details:', error);
+                    alert('An error occurred during transliteration: ' + error.message);
+                }
+                transliterateBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Transliterate';
+                transliterateBtn.disabled = false;
+            });
+        });
+        
+        // Translate functionality
+        translateBtn.addEventListener('click', function() {
+            const text = inputText.value.trim();
+            if (!text) {
+                alert('Please enter some text to translate.');
+                return;
+            }
+            
+            // Show loading state
+            translateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Translating...';
+            translateBtn.disabled = true;
+            
+            // Map language values to language codes for translation API
+            let sourceLanguageCode;
+            switch(inputLanguage.value) {
+                case 'hindi':
+                    sourceLanguageCode = 'hi';
+                    break;
+                case 'marathi':
+                    sourceLanguageCode = 'mr';
+                    break;
+                case 'english':
+                    sourceLanguageCode = 'en';
+                    break;
+                default:
+                    sourceLanguageCode = 'hi';
+            }
+              // Call the backend API - use absolute URL to avoid path issues
+            fetch('http://127.0.0.1:5000/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    'input_text': text,
+                    'source_lang': sourceLanguageCode,
+                    'target_lang': 'en'  // Currently only supporting English output
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                outputText.value = data.translation;
+                document.getElementById('guest-output-label').textContent = 'Translated Text';
+                translateBtn.innerHTML = '<i class="fas fa-language me-2"></i>Translate';
+                translateBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during translation: ' + error.message);
+                translateBtn.innerHTML = '<i class="fas fa-language me-2"></i>Translate';
+                translateBtn.disabled = false;
+            });
+        });
+        
+        // Clear button functionality
+        clearBtn.addEventListener('click', function() {
+            inputText.value = '';
+            outputText.value = '';
+            document.getElementById('guest-output-label').textContent = 'Transliterated Text';
+            inputText.focus();
+        });
+        
+        // Copy button functionality
+        copyBtn.addEventListener('click', function() {
+            if (!outputText.value) {
+                alert('No text to copy.');
+                return;
+            }
+            
+            outputText.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        });
+        
+        // Login prompt functionality
+        loginPrompt.addEventListener('click', function() {
+            // Store current input for potential login redirect
+            if (inputText.value) {
+                sessionStorage.setItem('transliterate_input', inputText.value);
+                sessionStorage.setItem('transliterate_language', inputLanguage.value);
+            }
+            
+            // Redirect to login
+            window.location.href = "{{ url_for('login') }}";
+        });
+    });
+    
+</script>
+{% endblock %}
