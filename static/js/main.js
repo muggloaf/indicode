@@ -1,43 +1,71 @@
 /**
- * indicode - Main JavaScript
- * Enhanced version with support for advanced transliteration features
+ * INDICODE - Main JavaScript
+ * =========================
+ * 
+ * This is the main JavaScript file for the indicode application, handling all client-side 
+ * functionality including UI initialization, form handling, API interactions, and user interactions.
+ * 
+ * Features:
+ * - Bootstrap UI component initialization (tooltips, popovers)
+ * - Form validation and submission
+ * - API communication for transliteration and translation
+ * - File handling and document processing
+ * - User feedback and correction submission
+ * - History and settings management
  */
 
+/**
+ * Initialize all functionality when the DOM is fully loaded
+ */
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Initialize tooltips
+    //---------------------------------------------------------------
+    // BOOTSTRAP UI COMPONENT INITIALIZATION
+    //---------------------------------------------------------------
+    
+    // Initialize Bootstrap tooltips for better UX
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-
-    // Initialize popovers
+    });    
+    
+    // Initialize Bootstrap popovers for additional info display
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
     popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl)
     });
-      // Add scroll detection for fixing position issues
+    
+    //---------------------------------------------------------------
+    // PAGE SCROLL HANDLING & TEXTAREA POSITIONING
+    //---------------------------------------------------------------
+    
+    // Add scroll detection to fix positioning issues with textareas
+    // This prevents layout issues during scrolling
     let scrollTimeout;
     window.addEventListener('scroll', function() {
+        // Add scrolling class to root for potential CSS adjustments
         document.documentElement.classList.add('scrolling');
         
-        // Ensure all textareas are properly positioned while scrolling
+        // Ensure all textareas maintain proper positioning during scroll
         document.querySelectorAll('textarea').forEach(textarea => {
             textarea.classList.add('scrolls-with-page');
             textarea.style.position = 'relative';
         });
         
+        // Remove scrolling class after scrolling stops (with debounce)
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(function() {
             document.documentElement.classList.remove('scrolling');
-        }, 100);
+        }, 100); // 100ms debounce
     });
     
     // Initialize all textareas with proper positioning
     document.querySelectorAll('textarea').forEach(textarea => {
         textarea.classList.add('scrolls-with-page');
         textarea.style.position = 'relative';
-    });    // All features are now available for free
+    });    
+    
+    // All features are now available for free
     window.showPremiumAlert = function() {
         // This function is now empty as all features are free
     };
@@ -119,7 +147,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             this.classList.add('was-validated');
         });
-    });    // Check for stored data upon page load (for dashboard history integration)
+    });    
+    
+    // Check for stored data upon page load (for dashboard history integration)
     if(sessionStorage.getItem('indicate_success')) {
         const alertEl = document.createElement('div');
         alertEl.className = 'alert alert-success alert-dismissible fade show notification-toast';
@@ -190,7 +220,9 @@ if (guestTransliterateBtn) {
         const inputText = document.getElementById('guest-input-text').value;
         const inputLanguage = document.getElementById('guest-input-language').value;
         const outputTextArea = document.getElementById('guest-output-text');
-        const outputLabel = document.getElementById('guest-output-label');        // Get feature flags from advanced options
+        const outputLabel = document.getElementById('guest-output-label');        
+        
+        // Get feature flags from advanced options
         const contextAware = document.getElementById('context-aware-switch')?.checked ?? true;
         const statisticalSchwa = document.getElementById('statistical-schwa-switch')?.checked ?? true;
         const autoExceptions = document.getElementById('auto-exceptions-switch')?.checked ?? true;
@@ -202,7 +234,8 @@ if (guestTransliterateBtn) {
         outputTextArea.value = 'Processing...';
         
         // Prepare form data
-        const formData = new FormData();        formData.append('input_text', inputText);
+        const formData = new FormData();
+        formData.append('input_text', inputText);
         formData.append('language', inputLanguage);
         formData.append('context_aware', contextAware.toString());
         formData.append('statistical_schwa', statisticalSchwa.toString());
@@ -226,7 +259,8 @@ if (guestTransliterateBtn) {
             } else {
                 outputTextArea.value = data.output;
                 outputLabel.textContent = 'Transliterated Text';
-                  // Show the feedback container
+                
+                // Show the feedback container
                 const feedbackContainer = document.getElementById('feedback-container');
                 feedbackContainer.style.display = 'block';
                 feedbackContainer.classList.add('scrolls-with-page');
@@ -511,3 +545,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+/**
+ * Confirmation function for deleting user's transliteration history
+ * Shows a confirmation dialog and submits the form if confirmed
+ */
+function confirmDeleteHistory() {
+    if (confirm('Are you sure you want to delete all your transliteration history? This action cannot be undone.')) {
+        // If confirmed, submit the form
+        document.getElementById('delete-history-form').submit();
+    }
+}
+
+/**
+ * Confirmation function for deleting user's account
+ * Shows a confirmation dialog and submits the form if confirmed
+ */
+function confirmDeleteAccount() {
+    if (confirm('WARNING: You are about to delete your account. This will permanently remove all your data and cannot be undone. Are you sure you want to proceed?')) {
+        // If confirmed, submit the form
+        document.getElementById('delete-account-form').submit();
+    }
+}

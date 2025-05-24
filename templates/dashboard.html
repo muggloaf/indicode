@@ -63,12 +63,10 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="row">
-        <!-- Indicode Tool -->
+    </div>    <!-- First Row: Quick Transliterate and Recent Activity with equal heights -->
+    <div class="row mb-4">        <!-- Quick Transliterate Tool -->
         <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow">
+            <div class="card border-0 shadow h-100">
                 <div class="card-header bg-white py-3">
                     <h5 class="mb-0 fw-bold"><i class="fas fa-language me-2"></i>Quick Transliterate</h5>
                 </div>
@@ -82,10 +80,17 @@
                                     <option value="english">English</option>
                                 </select>
                                 <label for="input-language">Input Language</label>
-                            </div>                            <label for="input-text" class="form-label">Enter Text to Transliterate</label>
-                            <div>
-                                <textarea id="input-text" class="form-control" style="height: 150px;"></textarea>
                             </div>
+                            <label for="input-text" class="form-label">Enter Text to Transliterate</label>
+                            <div>
+                                <textarea id="input-text" class="form-control" style="height: 120px;"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">                                
+                                <div>
+                                    <small class="text-muted">Paste your text</small>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="col-md-6 mt-3 mt-md-0">
                             <div class="form-floating mb-3">
@@ -95,11 +100,11 @@
                                     <option value="marathi">Marathi</option>
                                 </select>
                                 <label for="output-language">Output Language</label>
-                            </div>                            <label for="output-text" class="form-label" id="output-label">Transliterated Text</label>
-                            <div>
-                                <textarea id="output-text" class="form-control" style="height: 150px;" readonly></textarea>
                             </div>
-                            <div class="mt-3">
+                            <label for="output-text" class="form-label" id="output-label">Transliterated Text</label>                            <div>
+                                <textarea id="output-text" class="form-control" style="height: 120px;" readonly></textarea>
+                            </div>
+                            <div class="mt-3 d-flex justify-content-end">
                                 <button id="copy-btn" class="btn btn-sm btn-outline-success">
                                     <i class="fas fa-copy me-1"></i>Copy
                                 </button>
@@ -119,17 +124,15 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Recent Activity -->
+        </div>        <!-- Recent Activity -->
         <div class="col-lg-4 mb-4">
             <div class="card border-0 shadow h-100">
                 <div class="card-header bg-white py-3">
                     <h5 class="mb-0 fw-bold"><i class="fas fa-history me-2"></i>Recent Activity</h5>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0" style="overflow-y: auto; max-height: 400px;">
                     <div class="list-group list-group-flush">
-                        {% for item in history[:5] %}
+                        {% for item in history[:8] %}
                         <div class="list-group-item p-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -149,33 +152,74 @@
                 <div class="card-footer bg-white text-center">
                     <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-primary">View All History</a>
                 </div>
-            </div>        </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- File Upload Card -->
-        <div class="col-lg-4 mb-4">
+    <!-- Second Row: Batch Processing spanning full width -->
+    <div class="row">
+        <div class="col-12 mb-4">
             <div class="card border-0 shadow">
                 <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-file-upload me-2"></i>File Upload</h5>
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-file-upload me-2"></i>Batch Processing with Preview</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form id="fileUploadForm">
-                        <div class="mb-3">
-                            <label class="form-label">Select File</label>
-                            <input type="file" class="form-control" id="uploadFile" accept=".txt,.docx,.pdf">
-                            <div class="form-text">Supports TXT, DOCX, PDF (max 2MB)</div>
+                    <div class="row">
+                        <!-- File Upload Section -->
+                        <div class="col-lg-6">
+                            <form id="fileUploadForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Select File</label>
+                                    <input type="file" class="form-control" id="uploadFile" accept=".txt,.docx,.pdf">
+                                    <div class="form-text">Supports TXT, DOCX, PDF (max 2MB)</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Language</label>
+                                    <select class="form-select" id="uploadLanguage">
+                                        <option value="hindi">Hindi → English</option>
+                                        <option value="marathi">Marathi → English</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="enablePreview" checked>
+                                        <label class="form-check-label" for="enablePreview">
+                                            Enable Preview
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="uploadStatus" class="alert d-none"></div>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-outline-primary" id="previewBtn" disabled>
+                                        <i class="fas fa-eye me-2"></i>Preview Processing
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                        <i class="fas fa-upload me-2"></i>Process & Download File
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Language</label>
-                            <select class="form-select" id="uploadLanguage">
-                                <option value="hindi">Hindi → English</option>
-                                <option value="marathi">Marathi → English</option>
-                            </select>
+                        
+                        <!-- Preview Section -->
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Preview</label>
+                                <div class="border rounded p-3" style="height: 300px; overflow-y: auto; background-color: #f8f9fa;">
+                                    <div id="previewContent">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-eye fa-3x mb-3"></i>
+                                            <p>Select a file and click "Preview Processing" to see the transliteration preview</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-success" id="copyPreviewBtn" disabled>
+                                    <i class="fas fa-copy me-2"></i>Copy Preview Text
+                                </button>
+                            </div>
                         </div>
-                        <div id="uploadStatus" class="alert d-none"></div>
-                        <button type="submit" class="btn btn-primary w-100" id="uploadBtn">
-                            <i class="fas fa-upload me-2"></i>Process File
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -310,17 +354,95 @@
             copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
             setTimeout(() => {
                 copyBtn.innerHTML = originalText;
-            }, 2000);        });
-
-        // File Upload Handling
+            }, 2000);        });        // File Upload Handling with Preview
         const fileUploadForm = document.getElementById('fileUploadForm');
         const uploadStatus = document.getElementById('uploadStatus');
         const uploadBtn = document.getElementById('uploadBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const copyPreviewBtn = document.getElementById('copyPreviewBtn');
+        const previewContent = document.getElementById('previewContent');
+        const uploadFile = document.getElementById('uploadFile');
+        const enablePreview = document.getElementById('enablePreview');
 
+        let previewData = null;
+
+        // Enable/disable preview button when file is selected
+        uploadFile.addEventListener('change', function() {
+            previewBtn.disabled = !this.files[0];
+            if (!this.files[0]) {
+                resetPreview();
+            }
+        });
+
+        // Preview button handler
+        previewBtn.addEventListener('click', async function() {
+            const file = uploadFile.files[0];
+            const language = document.getElementById('uploadLanguage').value;
+
+            if (!file) {
+                showUploadStatus('Please select a file first.', 'danger');
+                return;
+            }
+
+            // Show loading state
+            previewBtn.disabled = true;
+            previewBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating Preview...';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('language', language);
+            formData.append('preview_only', 'true');
+
+            try {
+                const response = await fetch('/process_file', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Preview generation failed');
+                }
+
+                const result = await response.json();
+                previewData = result;
+                displayPreview(result);
+                copyPreviewBtn.disabled = false;
+                showUploadStatus('Preview generated successfully!', 'success');
+
+            } catch (error) {
+                showUploadStatus('Preview error: ' + error.message, 'danger');
+                resetPreview();
+            } finally {
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>Preview Processing';
+            }
+        });
+
+        // Copy preview button handler
+        copyPreviewBtn.addEventListener('click', function() {
+            if (!previewData || !previewData.transliterated_text) {
+                alert('No preview text to copy.');
+                return;
+            }
+
+            navigator.clipboard.writeText(previewData.transliterated_text).then(() => {
+                const originalText = copyPreviewBtn.innerHTML;
+                copyPreviewBtn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+                setTimeout(() => {
+                    copyPreviewBtn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy text to clipboard.');
+            });
+        });
+
+        // File upload form submission
         fileUploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const file = document.getElementById('uploadFile').files[0];
+            const file = uploadFile.files[0];
             const language = document.getElementById('uploadLanguage').value;
 
             if (!file) {
@@ -364,15 +486,60 @@
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(downloadUrl);
 
-                showUploadStatus('File processed successfully!', 'success');
+                showUploadStatus('File processed and downloaded successfully!', 'success');
                 fileUploadForm.reset();
+                resetPreview();
             } catch (error) {
                 showUploadStatus(error.message, 'danger');
             } finally {
                 uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Process File';
+                uploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Process & Download File';
             }
         });
+
+        function displayPreview(data) {
+            const maxPreviewLength = 2000; // Limit preview to 2000 characters
+            let originalText = data.original_text || '';
+            let transliteratedText = data.transliterated_text || '';
+            
+            // Truncate if too long
+            if (originalText.length > maxPreviewLength) {
+                originalText = originalText.substring(0, maxPreviewLength) + '...';
+            }
+            if (transliteratedText.length > maxPreviewLength) {
+                transliteratedText = transliteratedText.substring(0, maxPreviewLength) + '...';
+            }
+
+            previewContent.innerHTML = `
+                <div class="mb-3">
+                    <h6 class="fw-bold text-primary">Original Text:</h6>
+                    <div class="p-2 bg-light rounded border" style="max-height: 120px; overflow-y: auto;">
+                        <small>${originalText || 'No text extracted'}</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h6 class="fw-bold text-success">Transliterated Text:</h6>
+                    <div class="p-2 bg-light rounded border" style="max-height: 120px; overflow-y: auto;">
+                        <small>${transliteratedText || 'No transliteration available'}</small>
+                    </div>
+                </div>
+                <div class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Showing preview of processed content. Full file will be available for download.
+                </div>
+            `;
+        }
+
+        function resetPreview() {
+            previewContent.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="fas fa-eye fa-3x mb-3"></i>
+                    <p>Select a file and click "Preview Processing" to see the transliteration preview</p>
+                </div>
+            `;
+            copyPreviewBtn.disabled = true;
+            previewData = null;
+        }
 
         function showUploadStatus(message, type) {
             uploadStatus.textContent = message;

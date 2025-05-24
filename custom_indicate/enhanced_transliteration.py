@@ -10,6 +10,7 @@ from .schwa_deletion import apply_schwa_rules
 from .exception_detection import ExceptionDetector
 from .auto_capitalization import capitalize_text
 from .exceptions import get_exception, get_named_entity, is_schwa_exception
+from .nukta_exceptions import check_nukta_exceptions, has_nukta_characters
 
 class EnhancedTransliterator:
     """
@@ -82,35 +83,42 @@ class EnhancedTransliterator:
         
         # Preprocess input text
         text = preprocess_text(text)
-        
-        # Split into words for word-level processing
+          # Split into words for word-level processing
         words = text.split()
         transliterated_words = []
+        nukta_handled_words = set()  # Track words handled by nukta exceptions
         
         # Process each word
         for word in words:
-            # Step 1: Check for known exceptions first
+            # Step 1: Check nukta exceptions first (highest priority)
+            nukta_exception = check_nukta_exceptions(word)
+            if nukta_exception:
+                transliterated_words.append(nukta_exception)
+                nukta_handled_words.add(len(transliterated_words) - 1)  # Mark this position as nukta-handled
+                continue
+            
+            # Step 2: Check for known exceptions
             exception = get_exception(word, self.language) if auto_exceptions else None
             
             if exception:
                 transliterated_words.append(exception)
                 continue
             
-            # Step 2: Check for named entities
+            # Step 3: Check for named entities
             named_entity = get_named_entity(word) if auto_exceptions else None
             
             if named_entity:
                 transliterated_words.append(named_entity)
                 continue
             
-            # Step 3: Check for automatically detected exceptions
+            # Step 4: Check for automatically detected exceptions
             auto_exception = self.exception_detector.get_exception(word) if auto_exceptions else None
             
             if auto_exception:
                 transliterated_words.append(auto_exception)
                 continue
             
-            # Step 4: Basic transliteration
+            # Step 5: Basic transliteration
             # Check for direct nukta word mappings first
             direct_transliteration = self._get_direct_nukta_transliteration(word)
             if direct_transliteration:
@@ -123,34 +131,52 @@ class EnhancedTransliterator:
                 if self.language == 'hindi':
                     transliterated = hindi2english(nukta_fixed_word)
                 else:  # marathi
-                    transliterated = marathi2english(nukta_fixed_word)
-            # Step 5: Apply statistical schwa deletion if enabled
-            if statistical_schwa:
-                transliterated = apply_schwa_rules(transliterated, word)
+                    transliterated = marathi2english(nukta_fixed_word)            # Step 6: Apply statistical schwa deletion if enabled
+            # Skip schwa deletion for words with nukta characters if they weren't handled by exceptions
+            current_index = len(transliterated_words)
+            
+            # CRITICAL: Never apply schwa deletion to nukta words or words starting with z, q, f or containing gh
+            # which are common indications of nukta-derived transliterations
+            has_nukta = has_nukta_characters(word)
+            starts_with_nukta_sound = transliterated and transliterated[0].lower() in 'zqf'
+            has_nukta_sound = 'gh' in transliterated.lower() or 'kh' in transliterated.lower()
+            
+            if statistical_schwa and current_index not in nukta_handled_words:
+                # Triple-check to make absolutely sure we don't apply schwa deletion to nukta words
+                if not has_nukta and not starts_with_nukta_sound and not has_nukta_sound:
+                    transliterated = apply_schwa_rules(transliterated, word)
             
             # Phonetic refinement step removed
             
             transliterated_words.append(transliterated)
         # Join words back into text
         transliterated_text = ' '.join(transliterated_words)
-        
-        # Apply context-aware fixes if enabled
+          # Apply context-aware fixes if enabled
         if context_aware:
             transliterated_text = apply_context_aware_transliteration(text, transliterated_text, self.language)
-          # Final postprocessing
-        transliterated_text = postprocess_text(transliterated_text)
-        # Apply auto-capitalization if enabled
+            
+        # Check and restore nukta words before postprocessing
+        # This ensures nukta words with final 'a' sounds are preserved
+        for i, word in enumerate(words):
+            if has_nukta_characters(word) and i < len(transliterated_words) and len(transliterated_words[i]) > 2:
+                # Special handling for nukta-derived words to ensure final 'a' is preserved
+                if transliterated_words[i][-1].lower() != 'a' and transliterated_words[i].lower()[0] in 'zqf':
+                    # Restore the final 'a' for nukta-derived words that should have it
+                    transliterated_words[i] = transliterated_words[i] + 'a'
+                
+        # Rejoin words after nukta word restoration
+        transliterated_text = ' '.join(transliterated_words)
+        
+        # Final postprocessing
+        transliterated_text = postprocess_text(transliterated_text)        # Apply auto-capitalization if enabled
         if auto_capitalization:
-            # Detect if this might be a title (short text, no sentence endings)
-            is_title = len(transliterated_text) < 100 and not any(char in transliterated_text for char in '.!?')
+            # Only treat as title if it's very short (2-3 words max) and looks like an actual title
+            # Most user input should be treated as regular sentences, not titles
+            words = transliterated_text.split()
+            is_title = (len(words) <= 2 and 
+                       len(transliterated_text) < 30 and 
+                       not any(char in transliterated_text for char in '.!?'))
             transliterated_text = capitalize_text(transliterated_text, self.language, is_title)
-        # Always ensure the first letter is capitalized, even when auto-capitalization is disabled
-        if transliterated_text and len(transliterated_text) > 0:
-            # Find the first letter (skipping any leading spaces or punctuation)
-            match = re.search(r'[a-z]', transliterated_text, re.IGNORECASE)
-            if match:
-                index = match.start()
-                transliterated_text = transliterated_text[:index] + transliterated_text[index].upper() + transliterated_text[index+1:]
         
         return transliterated_text
         
@@ -191,20 +217,11 @@ class EnhancedTransliterator:
         # For complex cases, we'll handle the nukta character preprocessing
         # and then let the base transliteration system handle it
         nukta = '\u093C'  # The nukta character (़)
+          # Nukta characters should be preserved for proper transliteration
+        # Don't replace nukta characters with their non-nukta equivalents
+        # The transliterate module has proper mappings for nukta characters
         
-        # Identify specific problematic patterns and fix them
-        if 'ड़' in text:
-            text = text.replace('ड़', 'ड')  # Replace with non-nukta form
-        if 'ढ़' in text:
-            text = text.replace('ढ़', 'ढ')
-        if 'ज़' in text:
-            text = text.replace('ज़', 'ज')
-        if 'फ़' in text:
-            text = text.replace('फ़', 'फ')
-        if 'क़' in text:
-            text = text.replace('क़', 'क')
-        
-        # Use the base transliteration preprocessing for any remaining nukta cases
+        # Use the base transliteration preprocessing for nukta cases
         from .transliterate import _preprocess_nukta_characters
         return _preprocess_nukta_characters(text)
     
@@ -229,7 +246,7 @@ class EnhancedTransliterator:
             
         # Phonetic rule refinement removed
         return improvements
-    
+        
     def set_feature_flags(self, context_aware=None, statistical_schwa=None, 
                           auto_exceptions=None, phonetic_refinement=None, auto_capitalization=None):
         """Set feature flags to enable/disable specific enhancements"""        
@@ -238,12 +255,15 @@ class EnhancedTransliterator:
         if statistical_schwa is not None:
             self.enable_statistical_schwa = statistical_schwa
         if auto_exceptions is not None:
-            self.enable_auto_exceptions = auto_exceptions        # Phonetic refinement parameter ignored as feature is removed        if auto_capitalization is not None:
+            self.enable_auto_exceptions = auto_exceptions
+        # Phonetic refinement parameter ignored as feature is removed
+        if auto_capitalization is not None:
             self.enable_auto_capitalization = auto_capitalization
-
+            
     def _get_direct_nukta_transliteration(self, text):
         """
         Provides direct transliteration for known problematic words with nukta characters.
+        
         This method completely bypasses the transliteration pipeline for specific words.
         
         Args:
@@ -254,6 +274,7 @@ class EnhancedTransliterator:
         """
         # Map of problematic nukta words to their correct transliterations
         nukta_word_map = {
+            # Special cases that need exact transliteration
             "पढ़ना": "padhna", 
             "पढ़ने": "padhne",
             "ज़रूर": "zaroor",
@@ -265,7 +286,17 @@ class EnhancedTransliterator:
             "कड़वा": "kadva",
             "बाज़ार": "bazar",
             "ढ़ाई": "dhai",
-            "साढ़े": "sadhe"
+            "साढ़े": "sadhe",
+            
+            # Words with final 'a' sounds that must be preserved
+            'ज़माना': 'zamana',
+            'वज़न': 'wazan',
+            'क़लम': 'qalam', 
+            'क़दम': 'qadam',
+            'मग़र': 'magar',
+            'ख़बर': 'khabar',
+            'सफ़र': 'safar',
+            'नज़र': 'nazar'
         }
         
         # Return the mapping if it exists, otherwise None
@@ -305,4 +336,19 @@ def enhanced_marathi2english(text, features=None):
         Enhanced transliteration
     """
     transliterator = EnhancedTransliterator('marathi')
+    return transliterator.transliterate(text, features)
+
+def enhanced_transliterate(text, language='hindi', features=None):
+    """
+    Main enhanced transliteration function
+    
+    Args:
+        text: Input text in Hindi/Marathi
+        language: 'hindi' or 'marathi'
+        features: Dict of feature flags to enable/disable specific enhancements
+    
+    Returns:
+        Enhanced transliteration
+    """
+    transliterator = EnhancedTransliterator(language)
     return transliterator.transliterate(text, features)

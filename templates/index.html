@@ -51,14 +51,15 @@
                                     </select>
                                     <label for="guest-input-language">Input Language</label>                                
                                 </div>   
-                                <label for="guest-input-text" class="form-label">Input Text</label>                             
-                                <div class="form-floating">
+                                <label for="guest-input-text" class="form-label">Input Text</label>                                <div class="form-floating">
                                     <textarea class="form-control" id="guest-input-text" style="height: 180px;"></textarea>
                                 </div>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <small class="text-muted">Type or paste your text</small>
+                                <div class="d-flex justify-content-between mt-2">                                    <div>
+                                        <small class="text-muted">Paste your text</small>
+                                    </div>
                                     <small class="text-muted">Max 500 characters</small>
                                 </div>
+
                             </div>
                             
                             <div class="col-md-6">
@@ -72,13 +73,9 @@
                                 </div>                                <label for="guest-output-text" class="form-label" id="guest-output-label">Output Text</label>                         
                                 <div class="form-floating">
                                     <textarea class="form-control" id="guest-output-text" style="height: 180px;" readonly></textarea>
-                                </div>
-                                <div class="d-flex justify-content-end mt-3">
-                                    <button class="btn btn-sm btn-outline-secondary me-2" id="guest-copy-btn">
+                                </div>                                <div class="d-flex justify-content-center mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" id="guest-copy-btn">
                                         <i class="fas fa-copy me-1"></i>Copy
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-primary" id="guest-login-prompt">
-                                        <i class="fas fa-save me-1"></i>Save
                                     </button>
                                 </div>
                             </div>
@@ -122,12 +119,12 @@
                                                 <small class="d-block text-muted">Capitalizes sentences, names, and titles</small>
                                             </div>
                                         </div>                                    </div>
-                                    <div class="mt-3" id="feedback-container" style="display: none;">                                        <h6 class="mb-2">Apply Edits to Your Transliteration</h6>
+                                    <div class="mt-4" id="feedback-container" style="display: none; margin-top: 1.5rem !important;"><h6 class="mb-2">Apply Edits to Your Transliteration</h6>
                                         <div class="feedback-form-wrapper">                                            <label for="corrected-text" class="form-label">Your Improved Transliteration</label>
                                             <div>
                                                 <textarea class="form-control" id="corrected-text" style="height: 80px;"></textarea>
                                             </div>
-                                            <button class="btn btn-sm btn-outline-primary" id="submit-feedback">
+                                            <button class="btn btn-sm btn-outline-primary" id="submit-feedback" style="margin-top: 10px;">
                                                 <i class="fas fa-paper-plane me-1"></i>Submit Correction
                                             </button>
                                             <small class="d-block text-muted mt-1">Help us improve by suggesting better transliterations</small>
@@ -372,7 +369,6 @@
                 <h2 class="fw-bold mb-4">Ready to Get Started?</h2>
                 <p class="lead mb-4">Create an account to save your transliterations and access all features</p>
                 <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3 mb-3">Sign Up Now</a>
-                <p><small class="text-muted">No credit card required</small></p>
             </div>
         </div>
     </div>
@@ -381,85 +377,112 @@
 
 {% block extra_js %}
 <script>
+    /**
+     * Home Page JavaScript - Guest Transliteration Tool
+     *
+     * This script handles the guest transliteration functionality on the home page,
+     * allowing users to try the transliteration tool without signing up.
+     * It includes transliteration, translation, copy, and clear functionality.
+     */
     document.addEventListener('DOMContentLoaded', function() {
-        const inputText = document.getElementById('guest-input-text');
-        const outputText = document.getElementById('guest-output-text');
-        const transliterateBtn = document.getElementById('guest-transliterate-btn');
-        const translateBtn = document.getElementById('guest-translate-btn');
-        const clearBtn = document.getElementById('guest-clear-btn');
-        const copyBtn = document.getElementById('guest-copy-btn');
-        const loginPrompt = document.getElementById('guest-login-prompt');
-        const inputLanguage = document.getElementById('guest-input-language');
-        const outputLabel = document.getElementById('guest-output-label');
+        // -----------------------------------------------------------------
+        // ELEMENT REFERENCES - Get all the DOM elements we'll need to interact with
+        // -----------------------------------------------------------------
+        const inputText = document.getElementById('guest-input-text');          // Text input textarea
+        const outputText = document.getElementById('guest-output-text');        // Result output textarea
+        const transliterateBtn = document.getElementById('guest-transliterate-btn'); // Transliterate button
+        const translateBtn = document.getElementById('guest-translate-btn');    // Translate button  
+        const clearBtn = document.getElementById('guest-clear-btn');            // Clear button
+        const copyBtn = document.getElementById('guest-copy-btn');              // Copy button
+        const inputLanguage = document.getElementById('guest-input-language');  // Language selector
+        const outputLabel = document.getElementById('guest-output-label');      // Dynamic label for output
         
-        // Transliterate functionality
+        // -----------------------------------------------------------------
+        // TRANSLITERATION FUNCTIONALITY - Process text maintaining pronunciation
+        // -----------------------------------------------------------------
         transliterateBtn.addEventListener('click', function() {
+            // Validate that we have text to process
             const text = inputText.value.trim();
             if (!text) {
                 alert('Please enter some text to transliterate.');
                 return;
             }
             
-            // Show loading state
+            // Update UI to show processing state
             transliterateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-            transliterateBtn.disabled = true;
-              // Call the backend API - use absolute URL to avoid path issues
+            transliterateBtn.disabled = true;              // Make API call to server for transliteration processing
+            // We use an absolute URL to avoid relative path issues
             fetch('http://127.0.0.1:5000/transliterate', {
-                method: 'POST',
+                method: 'POST',                // Using POST to send data to server
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/x-www-form-urlencoded',  // Form encoding
+                    'Accept': 'application/json'  // Expecting JSON response
                 },
-                body: new URLSearchParams({
-                    'input_text': text,
-                    'language': inputLanguage.value
+                body: new URLSearchParams({    // Format parameters as form data
+                    'input_text': text,        // Text to transliterate
+                    'language': inputLanguage.value  // Source language
                 })
             })
-            .then(response => response.json())            .then(data => {                outputText.value = data.output;
-                document.getElementById('guest-output-label').textContent = 'Transliterated Text';
+            .then(response => response.json())  // Parse JSON response
+            .then(data => {
+                // Success handling - update UI with transliteration result
+                outputText.value = data.output;  // Set output text
+                document.getElementById('guest-output-label').textContent = 'Transliterated Text';  // Update label
+                
+                // Reset button state
                 transliterateBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Transliterate';
                 transliterateBtn.disabled = false;
-            })            .catch(error => {
+            })
+            .catch(error => {
+                // Error handling with detailed information
                 console.error('Error:', error);
-                // More detailed error handling with debugging information
+                
+                // Provide user-friendly error messages based on error type
                 if (error.message && error.message.includes('Failed to fetch')) {
+                    // Network or server connection issues
                     console.log('Network error details:', error);
                     alert('Failed to connect to server. Please check your network connection and make sure the server is running at http://127.0.0.1:5000');
                 } else {
+                    // Other API errors
                     console.log('API error details:', error);
                     alert('An error occurred during transliteration: ' + error.message);
                 }
+                
+                // Reset button state even on error
                 transliterateBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Transliterate';
                 transliterateBtn.disabled = false;
             });
         });
-        
-        // Translate functionality
+          // -----------------------------------------------------------------
+        // TRANSLATION FUNCTIONALITY - Translate text to different language (not just transliterate)
+        // -----------------------------------------------------------------
         translateBtn.addEventListener('click', function() {
+            // Validate input
             const text = inputText.value.trim();
             if (!text) {
                 alert('Please enter some text to translate.');
                 return;
             }
             
-            // Show loading state
+            // Show loading state in the UI
             translateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Translating...';
             translateBtn.disabled = true;
             
-            // Map language values to language codes for translation API
+            // Convert our internal language values to standard ISO language codes
+            // These codes are needed for the translation API
             let sourceLanguageCode;
             switch(inputLanguage.value) {
                 case 'hindi':
-                    sourceLanguageCode = 'hi';
+                    sourceLanguageCode = 'hi';     // ISO code for Hindi
                     break;
                 case 'marathi':
-                    sourceLanguageCode = 'mr';
+                    sourceLanguageCode = 'mr';     // ISO code for Marathi
                     break;
                 case 'english':
-                    sourceLanguageCode = 'en';
+                    sourceLanguageCode = 'en';     // ISO code for English
                     break;
                 default:
-                    sourceLanguageCode = 'hi';
+                    sourceLanguageCode = 'hi';     // Default to Hindi
             }
               // Call the backend API - use absolute URL to avoid path issues
             fetch('http://127.0.0.1:5000/translate', {
@@ -491,45 +514,44 @@
                 translateBtn.disabled = false;
             });
         });
+          // -----------------------------------------------------------------
+        // UTILITY FUNCTIONS - Clear inputs and copy results
+        // -----------------------------------------------------------------
         
-        // Clear button functionality
+        // Clear button functionality - reset all inputs and outputs
         clearBtn.addEventListener('click', function() {
+            // Clear both input and output text areas
             inputText.value = '';
             outputText.value = '';
+            
+            // Reset output label to default
             document.getElementById('guest-output-label').textContent = 'Transliterated Text';
+            
+            // Set focus to input for immediate typing
             inputText.focus();
         });
         
-        // Copy button functionality
+        // Copy button functionality - copy output to clipboard
         copyBtn.addEventListener('click', function() {
+            // Validate that we have something to copy
             if (!outputText.value) {
                 alert('No text to copy.');
                 return;
             }
             
+            // Select text and execute copy command
             outputText.select();
             document.execCommand('copy');
             
-            // Visual feedback
+            // Provide visual feedback to confirm copy action
             const originalText = copyBtn.innerHTML;
             copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            
+            // Reset button text after delay
             setTimeout(() => {
                 copyBtn.innerHTML = originalText;
-            }, 2000);
-        });
-        
-        // Login prompt functionality
-        loginPrompt.addEventListener('click', function() {
-            // Store current input for potential login redirect
-            if (inputText.value) {
-                sessionStorage.setItem('transliterate_input', inputText.value);
-                sessionStorage.setItem('transliterate_language', inputLanguage.value);
-            }
-            
-            // Redirect to login
-            window.location.href = "{{ url_for('login') }}";
+            }, 2000);  // 2-second visual feedback
         });
     });
-    
-</script>
+    </script>
 {% endblock %}

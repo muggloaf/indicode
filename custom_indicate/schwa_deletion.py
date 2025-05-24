@@ -1,29 +1,60 @@
 """
-Statistical schwa deletion module
-Implements a more sophisticated approach to inherent vowel deletion in Hindi/Marathi
+Statistical Schwa Deletion Module
+================================
+
+This module implements a sophisticated approach to inherent vowel (schwa) deletion
+in Hindi and Marathi transliteration.
+
+The 'schwa' is the inherent 'a' vowel in Devanagari script that is often deleted
+in natural pronunciation but exists in the written form. For example:
+
+- कमल (kamal) is pronounced as "kamal" (both 'a' vowels are pronounced)
+- नमक (namak) is pronounced as "namak" (both 'a' vowels are pronounced)
+- बचपन (bachapan) is pronounced as "bachpan" (middle 'a' is deleted)
+
+Correctly handling schwa deletion is critical for natural-sounding transliteration.
+This module uses statistical patterns and machine learning to determine when to
+delete these inherent vowels, based on:
+- Word position (beginning, middle, end)
+- Surrounding consonants and vowels
+- Word length and syllable structure
+- Known exceptions and special cases
 """
 
 import re
 
-# Statistical patterns for schwa deletion based on word endings and syllable structure
+#---------------------------------------------------------------
+# SCHWA DELETION PATTERN DEFINITIONS
+#---------------------------------------------------------------
+
+# Statistical patterns for schwa deletion based on linguistic rules
+# These patterns are applied in sequence to determine which schwas to delete
 SCHWA_DELETION_PATTERNS = [
-    # Pattern format: (regex, replacement)
-    # These patterns implement common schwa deletion rules
+    # Pattern format: (regex_pattern, replacement_pattern)
+    # Each pattern implements a specific linguistic rule for schwa deletion
     
-    # 1. Word-final schwa deletion (excluding nukta combinations dh, z, f, q)
+    # 1. Word-final schwa deletion 
+    # Example: राम (rāma) → ram (final 'a' is deleted)
+    # Note: Excludes nukta combinations (dh, z, f, q) which have special handling
     (r'(?<!d)(?<!z)(?<!f)(?<!q)([kgcjtdnpbmyrlvsh])a$', r'\1'),
     
-    # 2. Schwa deletion in consonant clusters with specific endings (excluding nukta combinations)
+    # 2. Schwa deletion in consonant clusters with specific endings
+    # Example: कमल (kamala) → kamal (final schwa deleted but not medial)
+    # Excludes nukta combinations which have different phonetics
     (r'(?<!d)(?<!z)(?<!f)(?<!q)([kgcjtdnpbmyrlvsh])a([kgcjtdnpbmyrlvsh])a$', r'\1\2'),
     
     # 3. Schwa retention in certain syllable structures
+    # This ensures we don't delete schwas that should be pronounced
+    # Example: प्रकाश (prakāśa) → prakash (retained for phonetic clarity)
     (r'([kgcjtdnpbmyrlvshz])a([kgcjtdnpbmyrlvshz]{2})a$', r'\1a\2'),
     
-    # 4. Common word endings (-mana, -vana, etc.)
+    # 4. Common word endings with predictable patterns
+    # Example: आसमान (āsamāna) → asmaan (delete in specific endings)
     (r'([kgcjtdnpbmyrlvshz])a([mn])a$', r'\1\2'),
     
-    # 5. Special case for -aya endings
-    (r'aya$', r'ay'),
+    # 5. Special case for -aya endings - REMOVED due to issues
+    # Was causing incorrect transliterations like गया → gay instead of gaya
+    # (r'aya$', r'ay'),
 ]
 
 # Syllable structure patterns for schwa deletion probability
@@ -176,6 +207,20 @@ def calculate_schwa_deletion_probability(word, position):
     # Cap probability between 0 and 1
     return max(0, min(prob, 1))
 
+def has_explicit_vowels(original_word):
+    """
+    Check if the original Devanagari word has explicit vowel marks (matras)
+    If it has matras, schwa deletion should be much more conservative
+    """
+    if not original_word:
+        return False
+    
+    # All Devanagari matras (vowel marks)
+    matras = ['ा', 'ि', 'ी', 'ु', 'ू', 'े', 'ै', 'ो', 'ौ', 'ं', 'ः']
+    
+    # Check if word contains any matras
+    return any(matra in original_word for matra in matras)
+
 def apply_statistical_schwa_deletion(transliterated_word, original_word=None):
     """
     Apply statistical schwa deletion rules to a transliterated word
@@ -195,8 +240,38 @@ def apply_statistical_schwa_deletion(transliterated_word, original_word=None):
         elif original_word in SCHWA_EXCEPTIONS_TABLE['abnormal_retention']:
             # Preserve schwas
             return transliterated_word
+        
+        # Check if the original word has explicit vowels (matras)
+        if has_explicit_vowels(original_word):
+            # If word has matras, be very conservative with schwa deletion
+            # Only remove final 'a' if it's clearly a schwa (no matra at end)
+            
+            # Check if the last character in original word is a consonant without matra
+            last_char = original_word[-1]
+            
+            # Devanagari consonants without matras (these can have schwa deletion)
+            devanagari_consonants = [
+                'क', 'ख', 'ग', 'घ', 'ङ',
+                'च', 'छ', 'ज', 'झ', 'ञ', 
+                'ट', 'ठ', 'ड', 'ढ', 'ण',
+                'त', 'थ', 'द', 'ध', 'न',
+                'प', 'फ', 'ब', 'भ', 'म',
+                'य', 'र', 'ल', 'व',
+                'श', 'ष', 'स', 'ह',
+                # Nukta consonants
+                'ड़', 'ढ़', 'क़', 'ख़', 'ग़', 'ज़', 'फ़'
+            ]
+            
+            # Only apply very conservative schwa deletion
+            if (last_char in devanagari_consonants and 
+                transliterated_word.endswith('a')):
+                # Remove only final 'a' and only if it's clearly a schwa
+                return transliterated_word[:-1]
+            else:
+                # Don't apply any schwa deletion - word has explicit vowels
+                return transliterated_word
     
-    # Apply the statistical patterns
+    # Apply the statistical patterns only for words without explicit matras
     result = transliterated_word
     
     # Apply each pattern in order

@@ -29,8 +29,8 @@ HINDI_CHARS = {
     'फ़्रू': 'froo', 'फ़्रे': 'fre', 'फ़्रै': 'frai', 'फ़्रो': 'fro', 'फ़्रौ': 'frau',
     
     # ड़ (ra - retroflex flap) combinations with better consistency
-    'ड़': 'r',    'ड़ा': 'ra',  'ड़ि': 'ri',  'ड़ी': 're',  'ड़ु': 'ru',
-    'ड़ू': 'roo',  'ड़े': 're',   'ड़ै': 'rai',  'ड़ो': 'ro',   'ड़ौ': 'rau',
+    'ड़': 'd',    'ड़ा': 'da',  'ड़ि': 'di',  'ड़ी': 'de',  'ड़ु': 'du',
+    'ड़ू': 'doo',  'ड़े': 'de',   'ड़ै': 'dai',  'ड़ो': 'do',   'ड़ौ': 'dau',
       # Complex combinations with ढ़ - for completeness
     'ढ़्य': 'dhya', 'ढ़्या': 'dhyaa', 'ढ़्यु': 'dhyu', 'ढ़्यू': 'dhyoo',
     'ढ़्ये': 'dhye', 'ढ़्यो': 'dhyo', 'ढ़्यौ': 'dhyau',
@@ -40,12 +40,8 @@ HINDI_CHARS = {
     'क़': 'qa',     'क़ा': 'qaa',   'क़ि': 'qi',   'क़ी': 'qee',   'क़ु': 'qu',
     'क़ू': 'qoo',   'क़े': 'qe',    'क़ै': 'qai',   'क़ो': 'qo',    'क़ौ': 'qau',
     'ख़': 'kha',   'ख़ा': 'khaa', 'ख़ि': 'khi', 'ख़ी': 'khee', 'ख़ु': 'khu',
-    'ख़ू': 'khoo', 'ख़े': 'khe',  'ख़ै': 'khai', 'ख़ो': 'kho',  'ख़ौ': 'khau',
-    'ग़': 'gha',   'ग़ा': 'ghaa', 'ग़ि': 'ghi', 'ग़ी': 'ghee', 'ग़ु': 'ghu',
-    'ग़ू': 'ghoo', 'ग़े': 'ghe',  'ग़ै': 'ghai', 'ग़ो': 'gho',  'ग़ौ': 'ghau',    
-    'ड़': 'ra',    'ड़ा': 'raa',  'ड़ि': 'ri',  'ड़ी': 'ree',  'ड़ु': 'ru',
-    'ड़ू': 'roo',  'ड़े': 're',   'ड़ै': 'rai',  'ड़ो': 'ro',   'ड़ौ': 'rau',
-    # Line removed - duplicate entry
+    'ख़ू': 'khoo', 'ख़े': 'khe',  'ख़ै': 'khai', 'ख़ो': 'kho',  'ख़ौ': 'khau',    'ग़': 'gha',   'ग़ा': 'ghaa', 'ग़ि': 'ghi', 'ग़ी': 'ghee', 'ग़ु': 'ghu',
+    'ग़ू': 'ghoo', 'ग़े': 'ghe',  'ग़ै': 'ghai', 'ग़ो': 'gho',  'ग़ौ': 'ghau',
     
     # Consonant-Vowel combinations (व्यंजन + मात्रा)
     # क-row (ka)
@@ -567,11 +563,16 @@ def postprocess_text(text):
     
     # Define vowel patterns
     long_vowels = r'aa|ee|oo|ai|au|e|o|u|i'
+      # IMPORTANT: Do NOT apply aggressive schwa deletion in postprocessing
+    # Schwa deletion should only be handled by the dedicated schwa_deletion module
+    # which has proper logic to check for matras in the original text
     
-    # Replace consonant+a at word boundaries with just the consonant
-    # This pattern looks for consonant sounds followed by 'a' at word boundaries
-    consonant_pattern = f'({consonant_sounds})a\\b'
-    text = re.sub(consonant_pattern, r'\1', text)
+    # The following section was causing incorrect schwa deletion and has been COMPLETELY DISABLED.
+    # This fixed the issue where nukta words like "ज़माना" (zamana) were incorrectly becoming "zaman"
+    # and other nukta words were having their final vowels incorrectly removed.
+    
+    # NO SCHWA DELETION SHOULD HAPPEN HERE - it should only be handled by the dedicated module
+    # with proper checks for matras and nukta characters.
     
     # Fix common patterns in transliterated text
     
@@ -587,27 +588,35 @@ def postprocess_text(text):
     # This helps with words like "hindi" vs "hindee"
     # But don't convert all "ee" to "i" as "stree" should stay as "stree", not "stri"
     # Only apply to common word endings
-    text = re.sub(r'(hind|d)ee\b', r'\1i', text) 
+    text = re.sub(r'(hind|d)ee\b', r'\1i', text)    # No schwa deletion in postprocessing
+    # Schwa deletion is handled by the dedicated schwa_deletion module
+    # which has proper logic for detecting nukta characters and matras
     
-    # Common schwa deletion patterns for Hindi
+    # Note: Aggressive schwa deletion patterns have been disabled
+    # to prevent issues with nukta words and words with explicit matras    # Pattern corrections for common transliteration issues
+    # Safely apply minor post-processing with nukta character protection
     
-    # Pattern 1: CVCV -> CVCa (most common at word endings)
-    # Example: "namastea" -> "namaste"
-    text = re.sub(f'({consonant_sounds})a({consonant_sounds})a\\b', r'\1a\2', text)
+    # Helper function to check if a word might be derived from nukta characters
+    def is_likely_nukta_word(word):
+        return any(nukta_sound in word.lower() for nukta_sound in ['z', 'q', 'f', 'gh', 'kh'])
     
-    # Pattern 2: CVCVCV -> CVCVCa (for 3-syllable words)
-    # Example: "kamalaa" -> "kamala"
-    text = re.sub(f'({consonant_sounds})a({consonant_sounds})a({consonant_sounds})a\\b', r'\1a\2a\3', text)
+    # Only apply these fixes to non-nukta words
+    words = text.split()
+    for i, word in enumerate(words):
+        if not is_likely_nukta_word(word):
+            # Pattern 4: Convert 'aee' to 'ai' at the end of words
+            words[i] = re.sub(r'aee\b', 'ai', word)
+            
+            # Pattern 5: Convert 'ea' to 'e' at the end of words (for words like "namastea" -> "namaste")
+            words[i] = re.sub(r'ea\b', 'e', word)
     
-    # Pattern 3: CaCCa -> CaCaC (common in 2-syllable words with cluster)
-    # Example: "dharama" -> "dharam"
-    text = re.sub(f'({consonant_sounds})a({consonant_sounds})({consonant_sounds})a\\b', r'\1a\2\3', text)
+    text = ' '.join(words)
     
-    # Pattern 4: Convert 'aee' to 'ai' at the end of words
-    text = re.sub(r'aee\b', 'ai', text)
-    
-    # Pattern 5: Handle "aa" at the end of words - often transliterated as "a"
-    text = re.sub(r'([^a])aa\b', r'\1a', text)
+    # Pattern 6: Handle true "aa" (from आ matra) at the end of words
+    # But exclude cases where "aa" is actually "a" + consonant + "a" (like "aya", "aja", etc.)
+    # This pattern should only match genuine double-a from आ matra followed by inherent schwa
+    # Exclude common endings like "aya", "aja", "ala", "ana", "ama", "ara", "ava", "asa", "ata"
+    text = re.sub(r'([^ayajlnmrvst])aa\b', r'\1a', text)
     
     # Fix repeating consonant clusters (handle gemination)
     # This pattern handles cases like "pokka" -> "pakka", ensuring double consonants stay

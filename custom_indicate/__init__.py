@@ -1,24 +1,39 @@
 """
-Custom Indicate - Hindi/Marathi to English Transliteration
-An enhanced implementation with context-aware processing, 
-statistical schwa deletion, automatic exception detection,
-and auto-capitalization.
+# Custom Indicate - Hindi/Marathi to English Transliteration
+# =========================================================
+#
+# A sophisticated transliteration engine that converts Hindi and Marathi text 
+# to English, maintaining phonetic accuracy with advanced linguistic features:
+#
+# Key Features:
+# - Context-aware processing: Analyzes surrounding words for accurate transliteration
+# - Statistical schwa deletion: Intelligently removes inherent vowels using statistical models
+# - Automatic exception handling: Detects and handles special cases and known exceptions
+# - Auto-capitalization: Properly capitalizes sentences, proper nouns, and titles
+# - Machine learning capabilities: Learns from user corrections to improve over time
+# - Support for multiple languages: Currently Hindi and Marathi, with more planned
 """
 
-# Basic transliteration
+#---------------------------------------------------------------
+# BASIC TRANSLITERATION (core character mapping functionality)
+#---------------------------------------------------------------
 from .transliterate import hindi2english, marathi2english
 
-# Enhanced transliteration with all improvements
+#---------------------------------------------------------------
+# ENHANCED TRANSLITERATION (with all improvements and features)
+#---------------------------------------------------------------
 from .enhanced_transliteration import (
-    EnhancedTransliterator, 
-    enhanced_hindi2english, 
-    enhanced_marathi2english
+    EnhancedTransliterator,  # Main transliteration class
+    enhanced_hindi2english,  # Function for Hindi transliteration
+    enhanced_marathi2english  # Function for Marathi transliteration
 )
 
-# Individual components if needed separately
-from .context_aware import apply_context_aware_transliteration
-from .schwa_deletion import apply_schwa_rules
-from .exception_detection import identify_exceptions, learn_from_corrections
-from .auto_capitalization import capitalize_text
+#---------------------------------------------------------------
+# INDIVIDUAL COMPONENTS (can be used separately if needed)
+#---------------------------------------------------------------
+from .context_aware import apply_context_aware_transliteration  # Contextual analysis
+from .schwa_deletion import apply_schwa_rules  # Inherent vowel deletion rules
+from .exception_detection import identify_exceptions, learn_from_corrections  # Exception handling
+from .auto_capitalization import capitalize_text  # Smart capitalization features
 
 __version__ = '0.2.0'

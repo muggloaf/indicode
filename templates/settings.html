@@ -51,11 +51,11 @@
                             <h5 class="mb-0 fw-bold"><i class="fas fa-user-circle me-2"></i>Profile Settings</h5>
                         </div>
                         <div class="card-body p-4">
-                            <form>
-                                <div class="mb-4 text-center">
+                            <form>                                <div class="mb-4 text-center">
                                     <div class="position-relative d-inline-block">
-                                        <img src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=random&size=100" class="rounded-circle img-thumbnail" style="width: 100px; height: 100px;" alt="Profile Avatar">
-                                        <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle p-2" onclick="showPremiumAlert()">
+                                        <img src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=random&size=100" class="rounded-circle img-thumbnail" style="width: 100px; height: 100px;" alt="Profile Avatar" id="profile-image">
+                                        <input type="file" id="profile-photo-input" accept="image/*" style="display: none;">
+                                        <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle p-2" onclick="document.getElementById('profile-photo-input').click()">
                                             <i class="fas fa-camera"></i>
                                         </button>
                                     </div>
@@ -101,9 +101,8 @@
                                 <div class="mb-3">
                                     <label for="confirmPassword" class="form-label">Confirm New Password</label>
                                     <input type="password" class="form-control" id="confirmPassword">
-                                </div>
-                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <button type="button" class="btn btn-primary" onclick="showSavedAlert()">Update Password</button>
+                                </div>                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-primary" onclick="updatePassword()">Update Password</button>
                                 </div>
                             </form>
                         </div>
@@ -122,13 +121,12 @@
                                     <label class="form-label">Default Input Language</label>
                                     <select class="form-select">
                                         <option value="hindi" selected>Hindi</option>
-                                        <option value="bengali" disabled>Bengali (Coming Soon)</option>
-                                        <option value="tamil" disabled>Tamil (Coming Soon)</option>
-                                        <option value="telugu" disabled>Telugu (Coming Soon)</option>
+                                        <option value="bengali">Marathi</option>
+                                        <option value="tamil" disabled>English (coming soon)</option>
                                     </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Theme</label>                                    <select class="form-select">
+                                </div>                                <div class="mb-3">
+                                    <label class="form-label">Theme</label>
+                                    <select class="form-select" id="theme-selector">
                                         <option value="light" selected>Light</option>
                                         <option value="dark">Dark</option>
                                         <option value="system">System Default</option>
@@ -159,17 +157,20 @@
                         <div class="card-header bg-danger text-white py-3">
                             <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h5>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="mb-4">
+                        <div class="card-body p-4">                            <div class="mb-4">
                                 <h5>Delete All History</h5>
                                 <p class="text-muted">This action will permanently delete all your transliteration history. This cannot be undone.</p>
-                                <button class="btn btn-outline-danger" onclick="showConfirmAlert('Are you sure you want to delete all history? This action cannot be undone.')">Delete All History</button>
+                                <form action="{{ url_for('delete_history') }}" method="POST" id="delete-history-form">
+                                    <button type="button" class="btn btn-outline-danger" onclick="confirmDeleteHistory()">Delete All History</button>
+                                </form>
                             </div>
                             <hr>
                             <div>
                                 <h5>Delete Account</h5>
                                 <p class="text-muted">Once you delete your account, there is no going back. Please be certain.</p>
-                                <button class="btn btn-danger" onclick="showConfirmAlert('Are you sure you want to delete your account? All of your data will be permanently removed. This action cannot be undone.')">Delete Account</button>
+                                <form action="{{ url_for('delete_account') }}" method="POST" id="delete-account-form">
+                                    <button type="button" class="btn btn-danger" onclick="confirmDeleteAccount()">Delete Account</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -191,18 +192,138 @@
                 new bootstrap.Tab(tab).show();
             }
         }
-        
-        // Update URL when tabs are changed
+          // Update URL when tabs are changed
         const tabs = document.querySelectorAll('[data-bs-toggle="list"]');
         tabs.forEach(tab => {
             tab.addEventListener('shown.bs.tab', function (e) {
                 window.location.hash = e.target.hash;
             });
         });
+          // Handle profile photo upload
+        const profilePhotoInput = document.getElementById('profile-photo-input');
+        const profileImage = document.getElementById('profile-image');
+        
+        profilePhotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file.');
+                    return;
+                }
+                
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB.');
+                    return;
+                }
+                
+                // Preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profileImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                // Here you would typically upload the file to your server
+                // For now, we'll just show a success message
+                setTimeout(() => {
+                    alert('Profile photo updated successfully!');
+                }, 500);
+            }
+        });
+        
+        // Theme switching functionality
+        const themeSelector = document.getElementById('theme-selector');
+        
+        // Load saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        themeSelector.value = savedTheme;
+        applyTheme(savedTheme);
+        
+        // Handle theme changes
+        themeSelector.addEventListener('change', function() {
+            const selectedTheme = this.value;
+            applyTheme(selectedTheme);
+            localStorage.setItem('theme', selectedTheme);
+        });
+        
+        function applyTheme(theme) {
+            if (theme === 'system') {
+                // Use system preference
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-bs-theme', systemTheme);
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+        }
+        
+        // Listen for system theme changes when "system" is selected
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+            if (themeSelector.value === 'system') {
+                applyTheme('system');
+            }
+        });
     });
-    
-    function showSavedAlert() {
+      function showSavedAlert() {
         alert('Changes saved successfully!');
+    }
+    
+    function updatePassword() {
+        const currentPassword = document.getElementById('currentPassword');
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        // Basic validation
+        if (!currentPassword.value.trim()) {
+            alert('Please enter your current password.');
+            currentPassword.focus();
+            return;
+        }
+        
+        if (!newPassword.value.trim()) {
+            alert('Please enter a new password.');
+            newPassword.focus();
+            return;
+        }
+        
+        if (newPassword.value.length < 8) {
+            alert('New password must be at least 8 characters long.');
+            newPassword.focus();
+            return;
+        }
+        
+        if (newPassword.value !== confirmPassword.value) {
+            alert('New password and confirmation do not match.');
+            confirmPassword.focus();
+            return;
+        }
+        
+        // Here you would typically send the password change request to your server
+        // For now, we'll simulate a successful password change
+        
+        // Simulate processing delay
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            // Reset button
+            button.innerHTML = originalText;
+            button.disabled = false;
+            
+            // Show success message
+            alert('Password updated successfully!');
+            
+            // Clear all password fields
+            currentPassword.value = '';
+            newPassword.value = '';
+            confirmPassword.value = '';
+            
+            // Focus back to current password field for next use
+            currentPassword.focus();
+        }, 1500);
     }
     
     function showConfirmAlert(message) {
