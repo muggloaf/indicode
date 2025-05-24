@@ -10,11 +10,11 @@ SCHWA_DELETION_PATTERNS = [
     # Pattern format: (regex, replacement)
     # These patterns implement common schwa deletion rules
     
-    # 1. Word-final schwa deletion
-    (r'([kgcjtdnpbmyrlvshz])a$', r'\1'),
+    # 1. Word-final schwa deletion (excluding nukta combinations dh, z, f, q)
+    (r'(?<!d)(?<!z)(?<!f)(?<!q)([kgcjtdnpbmyrlvsh])a$', r'\1'),
     
-    # 2. Schwa deletion in consonant clusters with specific endings
-    (r'([kgcjtdnpbmyrlvshz])a([kgcjtdnpbmyrlvshz])a$', r'\1\2'),
+    # 2. Schwa deletion in consonant clusters with specific endings (excluding nukta combinations)
+    (r'(?<!d)(?<!z)(?<!f)(?<!q)([kgcjtdnpbmyrlvsh])a([kgcjtdnpbmyrlvsh])a$', r'\1\2'),
     
     # 3. Schwa retention in certain syllable structures
     (r'([kgcjtdnpbmyrlvshz])a([kgcjtdnpbmyrlvshz]{2})a$', r'\1a\2'),

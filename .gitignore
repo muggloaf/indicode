@@ -17,6 +17,7 @@ instance/
 # Database
 *.db
 *.sqlite
+*.db.bak
 
 # IDE specific files
 .idea/
@@ -30,9 +31,21 @@ Thumbs.db
 
 # Local configuration
 .env
+*.env
+.env.*
 
 # Debug/test files
 network_debug.html
 minimal_test.html
 test.html
 test_api.py
+
+# Logs
+*.log
+log/
+logs/
+
+# Backup files
+*.bak
+*.backup
+*~

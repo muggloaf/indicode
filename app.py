@@ -1,11 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 import json
+from docx import Document
+from PyPDF2 import PdfReader
+from io import BytesIO
+
 # Using enhanced custom implementation for transliteration
 from custom_indicate import enhanced_hindi2english, enhanced_marathi2english
 from custom_indicate.exception_detection import learn_from_corrections
@@ -13,8 +20,24 @@ from googletrans import Translator
 
 # Initialize Flask application
 app = Flask(__name__)
-# Enable CORS with more explicit configuration
-CORS(app, resources={r"/*": {"origins": "*", "supports_credentials": True}})
+
+# Configure maximum file upload size (2MB)
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
+
+# Enable CORS with proper configuration for local development
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://127.0.0.1:5000", "http://localhost:5000"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Accept"],
+        "supports_credentials": True,
+        "expose_headers": ["Content-Disposition"]  # Allow frontend to read filename
+    }
+})
+
+# Set cache control for file downloads
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 app.secret_key = 'your_super_secret_key_change_in_production'
 
 # Ensure database directory exists
@@ -193,6 +216,105 @@ def transliterate_text():
 def indicate_text():
     return transliterate_text()
 
+@app.route('/process_file', methods=['POST'])
+def process_file():
+    """Handle file upload and processing"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        # Get parameters
+        language = request.form.get('language', 'hindi')
+        filename = secure_filename(file.filename.lower())
+        
+        # Validate file type
+        if not any(filename.endswith(ext) for ext in ['.txt', '.docx', '.pdf']):
+            return jsonify({'error': 'Invalid file type'}), 400
+
+        # Process content based on file type
+        content = []
+        try:
+            if filename.endswith('.txt'):
+                try:
+                    content = file.read().decode('utf-8').splitlines()
+                except UnicodeDecodeError:
+                    file.seek(0)
+                    content = file.read().decode('latin-1').splitlines()
+            
+            elif filename.endswith('.docx'):
+                doc = Document(BytesIO(file.read()))
+                content = [para.text for para in doc.paragraphs if para.text.strip()]
+            
+            elif filename.endswith('.pdf'):
+                pdf = PdfReader(BytesIO(file.read()))
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if text.strip():
+                        content.extend(text.strip().splitlines())
+
+        except Exception as e:
+            return jsonify({'error': f'Failed to read file: {str(e)}'}), 400
+
+        # Process each line
+        results = []
+        features = {
+            'context_aware': True,
+            'statistical_schwa': True,
+            'auto_exceptions': True,
+            'phonetic_refinement': True,
+            'auto_capitalization': True
+        }
+
+        for text in content:
+            if text.strip():                
+                try:
+                    processed = enhanced_hindi2english(text.strip(), features=features) if language == 'hindi' else enhanced_marathi2english(text.strip(), features=features)
+                    results.append([text.strip(), processed])
+                except Exception as e:
+                    # More detailed error logging for special characters
+                    print(f"Error processing line: {text}")
+                    print(f"Error details: {str(e)}")
+                    print("Character details:")
+                    for i, char in enumerate(text.strip()):
+                        print(f"Position {i}: '{char}' (Unicode: U+{ord(char):04X})")
+                    # Still attempt basic transliteration even if enhanced fails
+                    try:
+                        from custom_indicate.transliterate import hindi2english, marathi2english
+                        basic_processed = hindi2english(text.strip()) if language == 'hindi' else marathi2english(text.strip())
+                        results.append([text.strip(), basic_processed])
+                    except Exception as e2:
+                        print(f"Basic transliteration also failed: {str(e2)}")
+                        results.append([text.strip(), text.strip()])
+        output = BytesIO()
+        
+        # Add each transliterated text as a new line
+        transliterated_lines = [row[1] for row in results]
+        output_text = "\n".join(transliterated_lines)
+        
+        output.write(output_text.encode('utf-8'))
+        output.seek(0)
+
+        # Generate output filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        base_name = os.path.splitext(filename)[0]
+        output_filename = f"{base_name}_transliterated_{timestamp}.txt"
+
+        # Send response
+        return send_file(
+            output,
+            mimetype='text/plain',
+            as_attachment=True,
+            download_name=output_filename,
+            max_age=0
+        )
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/translate', methods=['POST'])
 def translate_text():
     input_text = request.form.get('input_text', '')
@@ -216,12 +338,6 @@ def history():
 @login_required
 def settings():
     return render_template('settings.html')
-
-# API endpoint for batch processing (premium feature - greyed out)
-@app.route('/api/batch', methods=['POST'])
-@login_required
-def batch_process():
-    return jsonify({'status': 'premium_required'})
 
 # API endpoint for advanced analytics (premium feature - greyed out)
 @app.route('/api/analytics', methods=['GET'])
@@ -253,7 +369,28 @@ def submit_feedback():
     except Exception as e:
         return jsonify({'status': 'error', 'message': f'Error processing feedback: {str(e)}'})
 
-# Main application entry point
+def cleanup_temp_files(temp_dir, max_age_hours=1):
+    """Clean up old temporary files"""
+    try:
+        if not os.path.exists(temp_dir):
+            return
+            
+        current_time = datetime.now()
+        for filename in os.listdir(temp_dir):
+            filepath = os.path.join(temp_dir, filename)
+            try:
+                # Skip if file is currently being used
+                if not os.path.exists(filepath):
+                    continue
+                    
+                # Remove files older than max_age_hours
+                file_modified = datetime.fromtimestamp(os.path.getmtime(filepath))
+                if (current_time - file_modified).total_seconds() > max_age_hours * 3600:
+                    os.remove(filepath)
+            except Exception as e:
+                print(f"Error cleaning up file {filename}: {e}")
+    except Exception as e:
+        print(f"Error during temp file cleanup: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True)

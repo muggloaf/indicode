@@ -48,14 +48,13 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
+        </div>        <div class="col-md-4">
             <div class="card border-0 bg-info text-white mb-4 shadow">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="mb-0">Account Type</h5>
-                            <h2 class="mt-3 mb-0">Free</h2>
+                            <h5 class="mb-0">Welcome!</h5>
+                            <h2 class="mt-3 mb-0">{{ current_user.name }}</h2>
                         </div>
                         <div class="p-3 bg-white bg-opacity-25 rounded-circle">
                             <i class="fas fa-user fa-2x text-white"></i>
@@ -104,9 +103,6 @@
                                 <button id="copy-btn" class="btn btn-sm btn-outline-success">
                                     <i class="fas fa-copy me-1"></i>Copy
                                 </button>
-                                <button id="download-btn" class="btn btn-sm btn-outline-primary ms-2">
-                                    <i class="fas fa-download me-1"></i>Download
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -153,64 +149,39 @@
                 <div class="card-footer bg-white text-center">
                     <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-primary">View All History</a>
                 </div>
-            </div>
-        </div>
+            </div>        </div>
 
-        <!-- Premium Features (Greyed Out) -->
-        <div class="col-12 mb-4">
+        <!-- File Upload Card -->
+        <div class="col-lg-4 mb-4">
             <div class="card border-0 shadow">
                 <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold"><i class="fas fa-crown me-2 text-warning"></i>Premium Features</h5>
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-file-upload me-2"></i>File Upload</h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="card h-100 border-0 shadow-sm bg-light">
-                                <div class="card-body p-4 text-center">
-                                    <div class="feature-icon text-primary mb-3">
-                                        <i class="fas fa-file-import fa-3x"></i>
-                                    </div>
-                                    <h5 class="card-title text-muted">Batch Processing</h5>
-                                    <p class="card-text text-muted small">Upload multiple files and process them in one go. Save time with bulk operations.</p>
-                                    <button onclick="showPremiumAlert()" class="btn btn-sm btn-outline-secondary" disabled>Upgrade to Use</button>
-                                </div>
-                            </div>
+                    <form id="fileUploadForm">
+                        <div class="mb-3">
+                            <label class="form-label">Select File</label>
+                            <input type="file" class="form-control" id="uploadFile" accept=".txt,.docx,.pdf">
+                            <div class="form-text">Supports TXT, DOCX, PDF (max 2MB)</div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card h-100 border-0 shadow-sm bg-light">
-                                <div class="card-body p-4 text-center">
-                                    <div class="feature-icon text-primary mb-3">
-                                        <i class="fas fa-chart-line fa-3x"></i>
-                                    </div>
-                                    <h5 class="card-title text-muted">Advanced Analytics</h5>
-                                    <p class="card-text text-muted small">Get detailed insights into your indicode usage patterns and statistics.</p>
-                                    <button onclick="showPremiumAlert()" class="btn btn-sm btn-outline-secondary" disabled>Upgrade to Use</button>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Language</label>
+                            <select class="form-select" id="uploadLanguage">
+                                <option value="hindi">Hindi → English</option>
+                                <option value="marathi">Marathi → English</option>
+                            </select>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card h-100 border-0 shadow-sm bg-light">
-                                <div class="card-body p-4 text-center">
-                                    <div class="feature-icon text-primary mb-3">
-                                        <i class="fas fa-cloud-download-alt fa-3x"></i>
-                                    </div>
-                                    <h5 class="card-title text-muted">Export Tools</h5>
-                                    <p class="card-text text-muted small">Export your indicodes in various formats including PDF, DOCX, and more.</p>
-                                    <button onclick="showPremiumAlert()" class="btn btn-sm btn-outline-secondary" disabled>Upgrade to Use</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-white text-center">
-                    <a href="#" onclick="showPremiumAlert()" class="btn btn-warning">
-                        <i class="fas fa-crown me-2"></i>Upgrade to Premium
-                    </a>
+                        <div id="uploadStatus" class="alert d-none"></div>
+                        <button type="submit" class="btn btn-primary w-100" id="uploadBtn">
+                            <i class="fas fa-upload me-2"></i>Process File
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -223,9 +194,7 @@
         const clearBtn = document.getElementById('clear-btn');
         const copyBtn = document.getElementById('copy-btn');
         const inputLanguageSelect = document.getElementById('input-language');
-        const outputLanguageSelect = document.getElementById('output-language');
-
-        // Check if there's stored input from history
+        const outputLanguageSelect = document.getElementById('output-language');        // Check if there's stored input from history
         if (sessionStorage.getItem('transliterate_input')) {
             inputText.value = sessionStorage.getItem('transliterate_input');
             if (sessionStorage.getItem('transliterate_language')) {
@@ -241,12 +210,11 @@
             if (!text) {
                 alert('Please enter some text to transliterate.');
                 return;
-            }
-
-            // Show loading effect
+            }            // Show loading effect
             transliterateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-            transliterateBtn.disabled = true;            // Call the transliterate API - using absolute URL for reliability
-            fetch('http://127.0.0.1:5000/transliterate', {
+            transliterateBtn.disabled = true;
+            // Call the transliterate API using relative URL
+            fetch('/transliterate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -342,19 +310,74 @@
             copyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
             setTimeout(() => {
                 copyBtn.innerHTML = originalText;
-            }, 2000);
-        });
+            }, 2000);        });
 
-        // Disable download button (premium feature)
-        document.getElementById('download-btn').addEventListener('click', function(e) {
+        // File Upload Handling
+        const fileUploadForm = document.getElementById('fileUploadForm');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        fileUploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            showPremiumAlert();
-        });
-    });
+            
+            const file = document.getElementById('uploadFile').files[0];
+            const language = document.getElementById('uploadLanguage').value;
 
-    // Premium alert function
-    function showPremiumAlert() {
-        alert('This feature is available only in the premium version. Please upgrade to access it.');
-    }
+            if (!file) {
+                showUploadStatus('Please select a file.', 'danger');
+                return;
+            }
+
+            // Check file size (2MB limit)
+            if (file.size > 2 * 1024 * 1024) {
+                showUploadStatus('File size exceeds 2MB limit.', 'danger');
+                return;
+            }
+
+            // Show loading state
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('language', language);
+
+            try {
+                const response = await fetch('/process_file', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Processing failed');
+                }
+
+                // Handle successful file download
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/["']/g, '') || 'processed_file.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+
+                showUploadStatus('File processed successfully!', 'success');
+                fileUploadForm.reset();
+            } catch (error) {
+                showUploadStatus(error.message, 'danger');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Process File';
+            }
+        });
+
+        function showUploadStatus(message, type) {
+            uploadStatus.textContent = message;
+            uploadStatus.className = `alert alert-${type}`;
+        }
+    }); // End of DOMContentLoaded event listener
 </script>
 {% endblock %}

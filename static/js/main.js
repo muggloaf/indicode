@@ -37,22 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('textarea').forEach(textarea => {
         textarea.classList.add('scrolls-with-page');
         textarea.style.position = 'relative';
-    });// Global function for Premium features
+    });    // All features are now available for free
     window.showPremiumAlert = function() {
-        const alertEl = document.createElement('div');
-        alertEl.className = 'alert alert-warning alert-dismissible fade show notification-toast';
-        alertEl.innerHTML = `
-            <strong><i class="fas fa-crown me-2"></i>Premium Feature!</strong>
-            <p class="mb-0">This is a premium feature. Please upgrade your account to access it.</p>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        document.body.appendChild(alertEl);
-        
-        // Auto dismiss after 4 seconds
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alertEl);
-            bsAlert.close();
-        }, 4000);
+        // This function is now empty as all features are free
     };
 
     // Animated scroll to anchors
@@ -315,3 +302,212 @@ if (submitFeedbackBtn) {
         });
     });
 }
+
+// Initialize the transliteration form handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Batch Processing Handler
+    const batchForm = document.getElementById('batchForm');
+    if (batchForm) {
+        batchForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const uploadButton = document.getElementById('upload-button');
+            const progressDiv = document.getElementById('upload-progress');
+            const errorDiv = document.getElementById('upload-error');
+            const successDiv = document.getElementById('upload-success');
+            const normalText = uploadButton.querySelector('.normal-text');
+            const processingText = uploadButton.querySelector('.processing-text');
+            
+            // Reset UI
+            errorDiv.classList.add('d-none');
+            errorDiv.textContent = '';
+            successDiv.classList.add('d-none');
+            successDiv.textContent = '';
+            
+            // Show loading state
+            uploadButton.disabled = true;
+            normalText.classList.add('d-none');
+            processingText.classList.remove('d-none');
+            progressDiv.classList.remove('d-none');
+            
+            try {
+                const formData = new FormData(this);
+                
+                const response = await fetch('/batch_process', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to process file');
+                }
+                
+                // Get the filename from the Content-Disposition header
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'transliterated_document';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename\s*=\s*"?([^";\n]*)"/i);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1];
+                    }
+                }
+                
+                // Create blob and download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                // Show success message
+                successDiv.textContent = 'File processed successfully! Downloading...';
+                successDiv.classList.remove('d-none');
+                
+                // Reset form
+                this.reset();
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                errorDiv.textContent = error.message || 'An error occurred during file processing';
+                errorDiv.classList.remove('d-none');
+            } finally {
+                // Reset UI
+                uploadButton.disabled = false;
+                normalText.classList.remove('d-none');
+                processingText.classList.add('d-none');
+                progressDiv.classList.add('d-none');
+            }
+        });
+        
+        // File input validation
+        const fileInput = batchForm.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                const errorDiv = document.getElementById('upload-error');
+                
+                if (file) {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const allowedTypes = ['txt', 'docx', 'pdf'];
+                    
+                    if (!allowedTypes.includes(ext)) {
+                        errorDiv.textContent = 'Please select a valid file type (.txt, .docx, or .pdf)';
+                        errorDiv.classList.remove('d-none');
+                        this.value = '';
+                    } else {
+                        errorDiv.classList.add('d-none');
+                        errorDiv.textContent = '';
+                    }
+                }
+            });
+        }
+    }
+});
+
+// File Upload Handling
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const uploadButton = document.getElementById('upload-button');
+            const progressDiv = document.getElementById('upload-progress');
+            const errorDiv = document.getElementById('upload-error');
+            const successDiv = document.getElementById('upload-success');
+            const normalText = uploadButton.querySelector('.normal-text');
+            const processingText = uploadButton.querySelector('.processing-text');
+            
+            // Reset UI
+            errorDiv.classList.add('d-none');
+            errorDiv.textContent = '';
+            successDiv.classList.add('d-none');
+            successDiv.textContent = '';
+            
+            // Show loading state
+            uploadButton.disabled = true;
+            normalText.classList.add('d-none');
+            processingText.classList.remove('d-none');
+            progressDiv.classList.remove('d-none');
+            
+            try {
+                const formData = new FormData(this);
+                
+                const response = await fetch('/batch_process', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to process file');
+                }
+                
+                // Get the filename from the response headers
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'translated_document';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                // Create blob and download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                // Show success message
+                successDiv.textContent = 'File processed successfully! Downloading...';
+                successDiv.classList.remove('d-none');
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                errorDiv.textContent = error.message || 'An error occurred during file processing';
+                errorDiv.classList.remove('d-none');
+            } finally {
+                // Reset UI
+                uploadButton.disabled = false;
+                normalText.classList.remove('d-none');
+                processingText.classList.add('d-none');
+                progressDiv.classList.add('d-none');
+            }
+        });
+        
+        // File input validation
+        const fileInput = uploadForm.querySelector('input[type="file"]');
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            const errorDiv = document.getElementById('upload-error');
+            
+            if (file) {
+                const ext = file.name.split('.').pop().toLowerCase();
+                const allowedTypes = ['txt', 'docx', 'pdf'];
+                
+                if (!allowedTypes.includes(ext)) {
+                    errorDiv.textContent = 'Please select a valid file type (.txt, .docx, or .pdf)';
+                    errorDiv.classList.remove('d-none');
+                    this.value = '';
+                } else {
+                    errorDiv.classList.add('d-none');
+                }
+            }
+        });
+    }
+});
+
