@@ -256,6 +256,111 @@ def login():
     
     return render_template('login.html')
 
+@app.route('/request-login-otp', methods=['POST'])
+def request_login_otp():
+    email = request.form.get('email')
+    
+    if not email:
+        flash('Email address is required.')
+        return redirect(url_for('login'))
+    
+    # Check if user exists
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        flash('No account found with this email address.')
+        return redirect(url_for('login'))
+    
+    # Generate OTP and store login data in session
+    otp = generate_otp()
+    
+    print(f"Generated login OTP: {otp} for email: {email}")
+    
+    # Store login OTP data in session
+    session['login_otp_data'] = {
+        'email': email,
+        'user_id': user.id,
+        'otp': otp,
+        'expires_at': (datetime.utcnow() + timedelta(minutes=10)).isoformat()
+    }
+    
+    # Send OTP via email
+    subject = "Login OTP - IndiCode"
+    message = f"Hello {user.name},\n\nYou've requested to login to your IndiCode account. Please use the following OTP to complete your login:\n\nOTP: {otp}\n\nThis OTP will expire in 10 minutes.\n\nIf you didn't request this login, please ignore this email.\n\nBest regards,\nIndiCode Team"
+    
+    print("Attempting to send login OTP email...")
+    email_sent = send_email(email, subject, message)
+    print(f"Login OTP email send result: {email_sent}")
+    
+    if email_sent:
+        flash('Login OTP has been sent to your email.')
+        return redirect(url_for('verify_login_otp'))
+    else:
+        # Clear session data if email failed
+        session.pop('login_otp_data', None)
+        flash('Failed to send login OTP. Please try again.')
+        return redirect(url_for('login'))
+
+@app.route('/verify-login-otp', methods=['GET', 'POST'])
+def verify_login_otp():
+    if 'login_otp_data' not in session:
+        flash('No pending login OTP found.')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        entered_otp = request.form.get('otp')
+        login_data = session['login_otp_data']
+        
+        # Check if OTP is expired
+        expires_at = datetime.fromisoformat(login_data['expires_at'])
+        if datetime.utcnow() > expires_at:
+            flash('OTP has expired. Please request a new one.')
+            session.pop('login_otp_data', None)
+            return redirect(url_for('login'))
+        
+        # Verify OTP
+        if entered_otp == login_data['otp']:
+            # Login the user
+            user = User.query.get(login_data['user_id'])
+            if user:
+                login_user(user)
+                session.pop('login_otp_data', None)
+                flash(f'Welcome back, {user.name}! You have been logged in successfully.')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('User account not found.')
+                session.pop('login_otp_data', None)
+                return redirect(url_for('login'))
+        else:
+            flash('Invalid OTP. Please try again.')
+    
+    return render_template('verify_login_otp.html', email=session['login_otp_data']['email'])
+
+@app.route('/resend-login-otp', methods=['POST'])
+def resend_login_otp():
+    if 'login_otp_data' not in session:
+        return jsonify({'success': False, 'message': 'No pending login OTP found.'})
+    
+    login_data = session['login_otp_data']
+    
+    # Generate new OTP
+    new_otp = generate_otp()
+    login_data['otp'] = new_otp
+    login_data['expires_at'] = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
+    session['login_otp_data'] = login_data
+    
+    # Get user details
+    user = User.query.get(login_data['user_id'])
+    
+    # Send new OTP
+    subject = "New Login OTP - IndiCode"
+    message = f"Hello {user.name},\n\nHere's your new login OTP:\n\nOTP: {new_otp}\n\nThis OTP will expire in 10 minutes.\n\nBest regards,\nIndiCode Team"
+    
+    if send_email(login_data['email'], subject, message):
+        return jsonify({'success': True, 'message': 'New login OTP sent successfully!'})
+    else:
+        return jsonify({'success': False, 'message': 'Failed to send OTP. Please try again.'})
+
 @app.route('/logout')
 @login_required
 def logout():

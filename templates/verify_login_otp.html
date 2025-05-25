@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Login OTP - indicode{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h1 class="h3 fw-bold">Verify Login OTP</h1>
+                        <p class="text-muted">We've sent a 6-digit OTP to <strong>{{ email }}</strong></p>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-info">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('verify_login_otp') }}">
+                        <div class="mb-4">
+                            <label for="otp" class="form-label">Enter OTP</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                <input type="text" class="form-control" id="otp" name="otp" maxlength="6" required 
+                                       placeholder="Enter 6-digit OTP" autocomplete="one-time-code">
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Verify & Login</button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-4 text-center">
+                        <p class="text-muted">Didn't receive the OTP?</p>
+                        <button class="btn btn-link text-decoration-none" onclick="resendLoginOTP()">Resend OTP</button>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">Back to Login</a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="text-decoration-none"><i class="fas fa-arrow-left me-2"></i>Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resendLoginOTP() {
+    fetch('/resend-login-otp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('New OTP sent successfully!');
+        } else {
+            alert('Failed to send OTP: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+// Auto-focus on OTP input
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('otp').focus();
+});
+</script>
+{% endblock %}
