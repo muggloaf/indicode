@@ -1,6 +1,6 @@
 # INDICODE - Hindi/Marathi to English Transliteration
 
-A sophisticated web application that transliterates Hindi and Marathi text to English with high accuracy, maintaining phonetic precision through advanced linguistic algorithms and machine learning techniques.
+A sophisticated web application that transliterates Hindi and Marathi text to English with high accuracy, maintaining phonetic precision through advanced linguistic algorithms, exhaustive phonetic mapping and user feedbacks.
 
 ## 🌟 Features
 
