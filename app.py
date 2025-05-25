@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file, make_response
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -12,6 +12,8 @@ import random
 import string
 import urllib.parse
 import tempfile
+import csv
+import io
 # Using enhanced custom implementation for transliteration
 from custom_indicate import enhanced_hindi2english, enhanced_marathi2english
 from custom_indicate.exception_detection import learn_from_corrections
@@ -682,6 +684,55 @@ def delete_history():
         db.session.rollback()
         flash('An error occurred while deleting history. Please try again.', 'danger')
     return redirect(url_for('settings'))
+
+@app.route('/export_history')
+@login_required
+def export_history():
+    """Export user's transliteration history as CSV"""
+    
+    # Get user's history
+    user_history = TransliterationHistory.query.filter_by(user_id=current_user.id).order_by(TransliterationHistory.created_at.desc()).all()
+    
+    # Create CSV content
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['Date & Time', 'Input Text', 'Output Text', 'Language'])
+    
+    # Write data
+    for item in user_history:
+        writer.writerow([
+            item.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            item.input_text.replace('\n', ' ').replace('\r', ' '),  # Replace newlines for CSV compatibility
+            item.output_text.replace('\n', ' ').replace('\r', ' '),
+            item.language.title()
+        ])
+    
+    # Prepare response
+    output.seek(0)
+    csv_data = output.getvalue()
+    output.close()
+    
+    # Create response with CSV
+    response = make_response(csv_data)
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = f'attachment; filename=transliteration_history_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+    
+    return response
+
+@app.route('/clear_history', methods=['POST'])
+@login_required
+def clear_history():
+    """Clear user's transliteration history via AJAX"""
+    try:
+        # Delete all transliteration history for the current user
+        TransliterationHistory.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'History cleared successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while clearing history'})
 
 @app.route('/delete_account', methods=['POST'])
 @login_required
