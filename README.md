@@ -21,6 +21,7 @@ A sophisticated web application that transliterates Hindi and Marathi text to En
 - **User Accounts**: Secure registration and login system
 - **History Tracking**: Save and manage your transliteration history
 - **CSV Export**: Export your transliteration history as CSV files
+- - **Batch Processing**: Upload .txt, .docx and .pdf files to get a transliterated .txt
 - **Preview Mode**: Preview document processing before download
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Translation Support**: Basic Hindi/Marathi to English translation via Google Translate
@@ -185,21 +186,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+- **Alesha Mulla** - [muggloaf](https://github.com/muggloaf)
+- **Ajinkya Ghule** - [GhuleAjikya](https://github.com/GhuleAjinkya)
 
 ## 🙏 Acknowledgments
 
-- Inspiration from various transliteration libraries
+- Inspiration from various transliteration libraries 
 - Hindi/Marathi linguistic research papers
 - Open source community for tools and libraries
 - Beta testers and feedback providers
-
-## 📞 Support
-
-If you have any questions or need help:
-- Create an issue on GitHub
-- Email: your.email@example.com
-- Documentation: [Link to detailed docs]
 
 ---
 
@@ -210,19 +205,3 @@ If you have any questions or need help:
 [![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-This README includes:
-
-1. **Professional badges and formatting**
-2. **Comprehensive feature list** based on your app's capabilities
-3. **Clear installation instructions**
-4. **Detailed project structure** matching your actual files
-5. **Technology stack** that reflects your dependencies
-6. **Usage examples** for all major features
-7. **API documentation** for developers
-8. **Contributing guidelines** to encourage collaboration
-9. **Roadmap** showing future plans
-10. **Professional sections** like acknowledgments and support
-
-You can customize the placeholders (like GitHub username, email, live demo URL) with your actual information. This README will help attract contributors and make your project look professional on GitHub!
-
-Similar code found with 1 license type
