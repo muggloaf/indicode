@@ -558,24 +558,12 @@ def postprocess_text(text):
     consonant_sounds = (
         r'kh|gh|ch|chh|jh|ny|th|dh|ph|bh|sh|ng|tr|gy|hr|hn|hm|hl|hv|hy|ll|'
         r'sn|sm|tn|bhr|ktr|ntr|str|shch|shtr|ksh|ddh|dbh|ndh|nn|sth|sph|zya|'
-        r'cch|tt|pp|mm|[kgcjtdnpbmyrlvshzfq]'  # Include more consonant clusters
+        r'cch|tt|pp|mm|[kgcjtdnpbmyrlvshzfq]'  
     )
     
     # Define vowel patterns
     long_vowels = r'aa|ee|oo|ai|au|e|o|u|i'
-      # IMPORTANT: Do NOT apply aggressive schwa deletion in postprocessing
-    # Schwa deletion should only be handled by the dedicated schwa_deletion module
-    # which has proper logic to check for matras in the original text
-    
-    # The following section was causing incorrect schwa deletion and has been COMPLETELY DISABLED.
-    # This fixed the issue where nukta words like "ज़माना" (zamana) were incorrectly becoming "zaman"
-    # and other nukta words were having their final vowels incorrectly removed.
-    
-    # NO SCHWA DELETION SHOULD HAPPEN HERE - it should only be handled by the dedicated module
-    # with proper checks for matras and nukta characters.
-    
-    # Fix common patterns in transliterated text
-    
+
     # Pattern 1: Convert "aaa" to "aa" (over-transliteration)
     text = re.sub(r'aaa', 'aa', text)
     
@@ -584,16 +572,20 @@ def postprocess_text(text):
     text = re.sub(r'aaa', 'aa', text)
     text = re.sub(r'eee', 'ee', text)
     text = re.sub(r'ooo', 'oo', text)
-      # Pattern 3: Selective handling for terminal "ee" vs "i" - case by case
+
+    # Pattern 3: Selective handling for terminal "ee" vs "i" - case by case
     # This helps with words like "hindi" vs "hindee"
     # But don't convert all "ee" to "i" as "stree" should stay as "stree", not "stri"
     # Only apply to common word endings
-    text = re.sub(r'(hind|d)ee\b', r'\1i', text)    # No schwa deletion in postprocessing
+    text = re.sub(r'(hind|d)ee\b', r'\1i', text)    
+    
+    # No schwa deletion in postprocessing
     # Schwa deletion is handled by the dedicated schwa_deletion module
     # which has proper logic for detecting nukta characters and matras
     
     # Note: Aggressive schwa deletion patterns have been disabled
-    # to prevent issues with nukta words and words with explicit matras    # Pattern corrections for common transliteration issues
+    # to prevent issues with nukta words and words with explicit matras    
+
     # Safely apply minor post-processing with nukta character protection
     
     # Helper function to check if a word might be derived from nukta characters

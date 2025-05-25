@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 import json
@@ -10,6 +11,7 @@ import requests
 import random
 import string
 import urllib.parse
+import tempfile
 # Using enhanced custom implementation for transliteration
 from custom_indicate import enhanced_hindi2english, enhanced_marathi2english
 from custom_indicate.exception_detection import learn_from_corrections
@@ -408,13 +410,11 @@ def transliterate_text():
     print(f"Input text: {input_text}")
     language = request.form.get('language', 'hindi')
     print(f"Language: {language}")
-    
-    # Get feature flags from form if available
+      # Get feature flags from form if available
     features = {
         'context_aware': request.form.get('context_aware', 'true').lower() == 'true',
         'statistical_schwa': request.form.get('statistical_schwa', 'true').lower() == 'true',
         'auto_exceptions': request.form.get('auto_exceptions', 'true').lower() == 'true',
-        'phonetic_refinement': request.form.get('phonetic_refinement', 'true').lower() == 'true',
         'auto_capitalization': request.form.get('auto_capitalization', 'true').lower() == 'true'
     }
     
@@ -483,6 +483,121 @@ def settings():
 @login_required
 def batch_process():
     return jsonify({'status': 'premium_required'})
+
+# Document processing endpoint
+@app.route('/process_file', methods=['POST'])
+@login_required
+def process_file():
+    import docx
+    import PyPDF2
+    from io import BytesIO
+    from werkzeug.utils import secure_filename
+    from flask import send_file
+    import tempfile
+    import os
+    
+    try:
+        # Check if file was uploaded
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Get parameters
+        language = request.form.get('language', 'hindi')
+        preview_only = request.form.get('preview_only', 'false').lower() == 'true'
+        
+        # Check file size (2MB limit)
+        file.seek(0, 2)  # Seek to end
+        file_size = file.tell()
+        file.seek(0)  # Seek back to beginning
+        
+        if file_size > 2 * 1024 * 1024:  # 2MB
+            return jsonify({'error': 'File size exceeds 2MB limit'}), 400
+        
+        # Extract text based on file type
+        filename = secure_filename(file.filename)
+        file_ext = filename.lower().split('.')[-1]
+        
+        text_content = ""
+        
+        if file_ext == 'txt':
+            text_content = file.read().decode('utf-8')
+        elif file_ext == 'docx':
+            doc = docx.Document(file)
+            text_content = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+        elif file_ext == 'pdf':
+            pdf_reader = PyPDF2.PdfReader(file)
+            text_content = ''
+            for page in pdf_reader.pages:
+                text_content += page.extract_text() + '\n'
+        else:
+            return jsonify({'error': 'Unsupported file type. Please use .txt, .docx, or .pdf'}), 400
+        
+        if not text_content.strip():
+            return jsonify({'error': 'No text content found in the file'}), 400
+        
+        # Transliterate the text
+        features = {
+            'context_aware': True,
+            'statistical_schwa': True,
+            'auto_exceptions': True,
+            'auto_capitalization': True
+        }
+        
+        if language == 'hindi':
+            transliterated_text = enhanced_hindi2english(text_content, features)
+        elif language == 'marathi':
+            transliterated_text = enhanced_marathi2english(text_content, features)
+        else:
+            return jsonify({'error': 'Unsupported language'}), 400
+        
+        # If preview only, return JSON
+        if preview_only:
+            return jsonify({
+                'original_text': text_content[:2000],  # Limit preview
+                'transliterated_text': transliterated_text[:2000],
+                'total_length': len(text_content)
+            })
+        
+        # Create output file
+        output_filename = f"transliterated_{filename.split('.')[0]}.txt"
+        
+        # Create a temporary file for download
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8')
+        temp_file.write(transliterated_text)
+        temp_file.close()
+        
+        # Save to history
+        if current_user.is_authenticated:
+            history = TransliterationHistory(
+                user_id=current_user.id,
+                input_text=text_content[:1000],  # Store first 1000 chars
+                output_text=transliterated_text[:1000],
+                language=language
+            )
+            db.session.add(history)
+            db.session.commit()
+        
+        # Return file for download
+        return send_file(
+            temp_file.name,
+            as_attachment=True,
+            download_name=output_filename,
+            mimetype='text/plain'
+        )
+        
+    except Exception as e:
+        return jsonify({'error': f'Error processing file: {str(e)}'}), 500
+
+# Batch processing endpoint (actual implementation)
+@app.route('/batch_process', methods=['POST'])
+@login_required  
+def batch_process_actual():
+    # This is the same as process_file but with different route name for compatibility
+    return process_file()
 
 # API endpoint for advanced analytics (premium feature - greyed out)
 @app.route('/api/analytics', methods=['GET'])
@@ -553,6 +668,38 @@ def check_feedback_access():
         return jsonify({'can_submit': True})
     else:
         return jsonify({'can_submit': False, 'message': 'Please log in to provide feedback'})
+
+# Settings page routes
+@app.route('/delete_history', methods=['POST'])
+@login_required
+def delete_history():
+    try:
+        # Delete all transliteration history for the current user
+        TransliterationHistory.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+        flash('All transliteration history has been deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while deleting history. Please try again.', 'danger')
+    return redirect(url_for('settings'))
+
+@app.route('/delete_account', methods=['POST'])
+@login_required
+def delete_account():
+    try:
+        user_id = current_user.id
+        # Delete all user's transliteration history first
+        TransliterationHistory.query.filter_by(user_id=user_id).delete()
+        # Delete the user account
+        User.query.filter_by(id=user_id).delete()
+        db.session.commit()
+        logout_user()
+        flash('Your account has been permanently deleted.', 'info')
+        return redirect(url_for('index'))
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while deleting your account. Please try again.', 'danger')
+        return redirect(url_for('settings'))
 
 # Main application entry point
 

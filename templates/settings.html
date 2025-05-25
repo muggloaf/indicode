@@ -325,10 +325,17 @@
             currentPassword.focus();
         }, 1500);
     }
+      function confirmDeleteHistory() {
+        if (confirm('Are you sure you want to delete all your transliteration history? This action cannot be undone.')) {
+            document.getElementById('delete-history-form').submit();
+        }
+    }
     
-    function showConfirmAlert(message) {
-        if (confirm(message)) {
-            alert('Operation completed successfully!');
+    function confirmDeleteAccount() {
+        if (confirm('Are you absolutely sure you want to delete your account? This action is permanent and cannot be undone. All your data will be lost.')) {
+            if (confirm('This is your final warning. Are you really sure you want to permanently delete your account?')) {
+                document.getElementById('delete-account-form').submit();
+            }
         }
     }
 </script>

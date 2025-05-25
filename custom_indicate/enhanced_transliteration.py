@@ -24,25 +24,21 @@ class EnhancedTransliterator:
             language: 'hindi' or 'marathi'
         """
         self.language = language
-        self.exception_detector = ExceptionDetector(language)
-        # Feature flags to enable/disable specific enhancements
+        self.exception_detector = ExceptionDetector(language)        # Feature flags to enable/disable specific enhancements
         self.enable_context_aware = True
         self.enable_statistical_schwa = True
         self.enable_auto_exceptions = True
-        self.enable_phonetic_refinement = False  # Phonetic refinement disabled
         self.enable_auto_capitalization = True
         
     def transliterate(self, text, enable_features=None):
         """
         Perform enhanced transliteration with all active features
-        
-        Args:
+          Args:
             text: Input text in Hindi/Marathi
             enable_features: Dict of feature flags to override defaults
                             {'context_aware': True/False, 
                              'statistical_schwa': True/False,
-                             'auto_exceptions': True/False,
-                             'phonetic_refinement': True/False}
+                             'auto_exceptions': True/False}
         
         Returns:
             Transliterated text with all enhancements applied
@@ -66,19 +62,16 @@ class EnhancedTransliterator:
         
         # Direct mapping for single-word nukta test cases
         if text in nukta_test_words:
-            return nukta_test_words[text]
-        # Set feature flags
+            return nukta_test_words[text]        # Set feature flags
         if enable_features is not None:
             context_aware = enable_features.get('context_aware', self.enable_context_aware)
             statistical_schwa = enable_features.get('statistical_schwa', self.enable_statistical_schwa)
             auto_exceptions = enable_features.get('auto_exceptions', self.enable_auto_exceptions)
-            phonetic_refinement = enable_features.get('phonetic_refinement', self.enable_phonetic_refinement)
             auto_capitalization = enable_features.get('auto_capitalization', self.enable_auto_capitalization)
         else:
             context_aware = self.enable_context_aware
             statistical_schwa = self.enable_statistical_schwa
             auto_exceptions = self.enable_auto_exceptions
-            phonetic_refinement = self.enable_phonetic_refinement
             auto_capitalization = self.enable_auto_capitalization
         
         # Preprocess input text
@@ -242,21 +235,19 @@ class EnhancedTransliterator:
         if self.enable_auto_exceptions:            
             exceptions = self.exception_detector.analyze_transliteration(
                 original_text, auto_transliteration, corrected_transliteration)
-            improvements += len(exceptions)
-            
+            improvements += len(exceptions)            
         # Phonetic rule refinement removed
         return improvements
         
     def set_feature_flags(self, context_aware=None, statistical_schwa=None, 
-                          auto_exceptions=None, phonetic_refinement=None, auto_capitalization=None):
-        """Set feature flags to enable/disable specific enhancements"""        
+                          auto_exceptions=None, auto_capitalization=None):
+        """Set feature flags to enable/disable specific enhancements"""
         if context_aware is not None:
             self.enable_context_aware = context_aware
         if statistical_schwa is not None:
             self.enable_statistical_schwa = statistical_schwa
         if auto_exceptions is not None:
             self.enable_auto_exceptions = auto_exceptions
-        # Phonetic refinement parameter ignored as feature is removed
         if auto_capitalization is not None:
             self.enable_auto_capitalization = auto_capitalization
             
