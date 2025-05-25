@@ -8,7 +8,7 @@ A sophisticated web application that transliterates Hindi and Marathi text to En
 - **Context-aware Processing**: Analyzes surrounding words for improved accuracy
 - **Statistical Schwa Deletion**: Intelligently handles inherent vowels using linguistic rules
 - **Auto-Capitalization**: Properly capitalizes sentences, names, and titles
-- **Machine Learning**: Learns from user corrections to improve over time
+- **Adaptive Learning**: Learns from user corrections to improve over time
 - **Document Processing**: Process .txt, .docx, and .pdf files
 - **User Accounts**: Save transliteration history and access advanced features
 - **Responsive Design**: Works on desktop and mobile devices
