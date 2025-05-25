@@ -188,6 +188,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Alesha Mulla** - [muggloaf](https://github.com/muggloaf)
 - **Ajinkya Ghule** - [GhuleAjikya](https://github.com/GhuleAjinkya)
+- **Aliza Kundal**
 
 ## 🙏 Acknowledgments
 
