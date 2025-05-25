@@ -285,54 +285,69 @@ if (guestTransliterateBtn) {
 const submitFeedbackBtn = document.getElementById('submit-feedback');
 if (submitFeedbackBtn) {
     submitFeedbackBtn.addEventListener('click', function() {
-        const originalText = document.getElementById('guest-input-text').value;
-        const autoTransliteration = document.getElementById('guest-output-text').value;
-        const correctedTransliteration = document.getElementById('corrected-text').value;
-        const language = document.getElementById('guest-input-language').value;
-        
-        // Don't submit if no changes were made
-        if (autoTransliteration === correctedTransliteration) {
-            showNotification('Please make changes to the transliteration before submitting feedback', 'warning');
-            return;
-        }
-        
-        // Show loading state
-        this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
-        
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('original_text', originalText);
-        formData.append('auto_transliteration', autoTransliteration);
-        formData.append('corrected_transliteration', correctedTransliteration);
-        formData.append('language', language);
-        
-        // Make the request
-        fetch('/feedback', {
-            method: 'POST',
-            body: formData
-        })
+        // First check if user can submit feedback
+        fetch('/check_feedback_access')
         .then(response => response.json())
-        .then(data => {
-            // Reset button state
-            this.disabled = false;
-            this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit Correction';
-            
-            if (data.status === 'error') {
-                showNotification(data.message, 'danger');
-            } else {
-                showNotification(data.message, 'success');
-                // Update the output text with the corrected version
-                document.getElementById('guest-output-text').value = correctedTransliteration;
-                // Hide the feedback container
-                document.getElementById('feedback-container').style.display = 'none';
+        .then(accessData => {
+            if (!accessData.can_submit) {
+                showNotification('Please log in to provide feedback', 'warning');
+                return;
             }
+            
+            // User is authenticated, proceed with feedback submission
+            const originalText = document.getElementById('guest-input-text').value;
+            const autoTransliteration = document.getElementById('guest-output-text').value;
+            const correctedTransliteration = document.getElementById('corrected-text').value;
+            const language = document.getElementById('guest-input-language').value;
+            
+            // Don't submit if no changes were made
+            if (autoTransliteration === correctedTransliteration) {
+                showNotification('Please make changes to the transliteration before submitting feedback', 'warning');
+                return;
+            }
+            
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('original_text', originalText);
+            formData.append('auto_transliteration', autoTransliteration);
+            formData.append('corrected_transliteration', correctedTransliteration);
+            formData.append('language', language);
+            
+            // Make the request
+            fetch('/feedback', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button state
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit Correction';
+                
+                if (data.status === 'error') {
+                    showNotification(data.message, 'danger');
+                } else {
+                    showNotification(data.message, 'success');
+                    // Update the output text with the corrected version
+                    document.getElementById('guest-output-text').value = correctedTransliteration;
+                    // Hide the feedback container
+                    document.getElementById('feedback-container').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit Correction';
+                showNotification('Failed to submit feedback. Please try again.', 'danger');
+            });
         })
         .catch(error => {
-            console.error('Error:', error);
-            this.disabled = false;
-            this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit Correction';
-            showNotification('Failed to submit feedback. Please try again.', 'danger');
+            console.error('Error checking access:', error);
+            showNotification('Please log in to provide feedback', 'warning');
         });
     });
 }

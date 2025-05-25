@@ -54,6 +54,22 @@ class TransliterationHistory(db.Model):
     language = db.Column(db.String(10), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# User Feedback Model - Individual Word Corrections
+class UserFeedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_email = db.Column(db.String(100), nullable=False)
+    user_name = db.Column(db.String(100), nullable=False)
+    original_word = db.Column(db.String(500), nullable=False)  # Original Hindi/Marathi word
+    original_transliteration = db.Column(db.String(500), nullable=False)  # What our system provided
+    corrected_transliteration = db.Column(db.String(500), nullable=False)  # User's correction
+    source_language = db.Column(db.String(10), nullable=False)  # 'hindi' or 'marathi'
+    target_language = db.Column(db.String(10), default='english', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship back to user
+    user = db.relationship('User', backref=db.backref('feedback', lazy=True))
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -476,6 +492,7 @@ def analytics():
 
 # API endpoint for submitting corrections and feedback
 @app.route('/feedback', methods=['POST'])
+@login_required
 def submit_feedback():
     original_text = request.form.get('original_text', '')
     auto_transliteration = request.form.get('auto_transliteration', '')
@@ -485,18 +502,57 @@ def submit_feedback():
     if not original_text or not auto_transliteration or not corrected_transliteration:
         return jsonify({'status': 'error', 'message': 'Missing required fields'})
     
-    # Learn from this correction
+    # Split texts into words for individual comparison
+    original_words = original_text.split()
+    auto_words = auto_transliteration.split()
+    corrected_words = corrected_transliteration.split()
+    
+    # Ensure all word lists have the same length
+    if len(original_words) != len(auto_words) or len(auto_words) != len(corrected_words):
+        return jsonify({'status': 'error', 'message': 'Word count mismatch between original, auto-transliterated, and corrected text'})
+    
+    # Save individual word corrections to database
+    corrections_count = 0
     try:
+        for i, (orig_word, auto_word, corrected_word) in enumerate(zip(original_words, auto_words, corrected_words)):
+            # Only save if there's a difference between auto and corrected
+            if auto_word != corrected_word:
+                feedback = UserFeedback(
+                    user_id=current_user.id,
+                    user_email=current_user.email,
+                    user_name=current_user.name or 'Anonymous',
+                    original_word=orig_word,
+                    original_transliteration=auto_word,
+                    corrected_transliteration=corrected_word,
+                    source_language=language,
+                    target_language='english'
+                )
+                db.session.add(feedback)
+                corrections_count += 1
+        
+        db.session.commit()
+        
+        # Learn from this correction (continue saving to JSON files too)
         exceptions = learn_from_corrections([original_text], [auto_transliteration], [corrected_transliteration], language)
         
         # Return success with the number of improvements learned
         return jsonify({
             'status': 'success', 
-            'message': f'Thank you for your feedback! {len(exceptions)} improvements learned.',
+            'message': f'Thank you for your feedback! {corrections_count} word corrections and {len(exceptions)} improvements learned.',
+            'corrections': corrections_count,
             'improvements': len(exceptions)
         })
     except Exception as e:
+        db.session.rollback()
         return jsonify({'status': 'error', 'message': f'Error processing feedback: {str(e)}'})
+
+# API endpoint to check if user can submit feedback
+@app.route('/check_feedback_access', methods=['GET'])
+def check_feedback_access():
+    if current_user.is_authenticated:
+        return jsonify({'can_submit': True})
+    else:
+        return jsonify({'can_submit': False, 'message': 'Please log in to provide feedback'})
 
 # Main application entry point
 
