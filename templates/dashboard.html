@@ -104,10 +104,53 @@
                             <label for="output-text" class="form-label" id="output-label">Transliterated Text</label>                            <div>
                                 <textarea id="output-text" class="form-control" style="height: 120px;" readonly></textarea>
                             </div>
-                            <div class="mt-3 d-flex justify-content-end">
-                                <button id="copy-btn" class="btn btn-sm btn-outline-success">
-                                    <i class="fas fa-copy me-1"></i>Copy
-                                </button>
+                            <div class="mt-3 d-flex justify-content-between">
+                                <div>
+                                    <a class="btn btn-sm btn-link ps-0" data-bs-toggle="collapse" href="#dashboardAdvancedOptions" role="button" aria-expanded="false" aria-controls="dashboardAdvancedOptions">
+                                        Advanced Options <i class="fas fa-caret-down ms-1"></i>
+                                    </a>
+                                </div>
+                                <div>
+                                    <button id="copy-btn" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-copy me-1"></i>Copy
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="collapse mb-4" id="dashboardAdvancedOptions">
+                                <div class="card card-body mt-3">
+                                    <h6 class="mb-3">Transliteration Features</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="context-aware-switch" checked>
+                                                <label class="form-check-label" for="context-aware-switch">Context-Aware Transliteration</label>
+                                                <small class="d-block text-muted">Improves accuracy based on surrounding words</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="statistical-schwa-switch" checked>
+                                                <label class="form-check-label" for="statistical-schwa-switch">Schwa Detection</label>
+                                                <small class="d-block text-muted">Intelligently removes inherent vowels</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-exceptions-switch" checked>
+                                                <label class="form-check-label" for="auto-exceptions-switch">Automatic Exception Detection</label>
+                                                <small class="d-block text-muted">Identifies and handles special cases</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-capitalization-switch" checked>
+                                                <label class="form-check-label" for="auto-capitalization-switch">Auto Capitalization</label>
+                                                <small class="d-block text-muted">Capitalizes sentences, names, and titles</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -256,7 +299,12 @@
                 return;
             }            // Show loading effect
             transliterateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-            transliterateBtn.disabled = true;
+            transliterateBtn.disabled = true;            // Get the feature flags state from the switches
+            const contextAware = document.getElementById('context-aware-switch')?.checked ?? true;
+            const statisticalSchwa = document.getElementById('statistical-schwa-switch')?.checked ?? true;
+            const autoExceptions = document.getElementById('auto-exceptions-switch')?.checked ?? true;
+            const autoCapitalization = document.getElementById('auto-capitalization-switch')?.checked ?? true;
+            
             // Call the transliterate API using relative URL
             fetch('/transliterate', {
                 method: 'POST',
@@ -266,7 +314,11 @@
                 },
                 body: new URLSearchParams({
                     'input_text': text,
-                    'language': inputLanguageSelect.value
+                    'language': inputLanguageSelect.value,
+                    'context_aware': contextAware.toString(),
+                    'statistical_schwa': statisticalSchwa.toString(), 
+                    'auto_exceptions': autoExceptions.toString(),
+                    'auto_capitalization': autoCapitalization.toString()
                 })
             })
             .then(response => response.json())

@@ -420,7 +420,13 @@
             
             // Update UI to show processing state
             transliterateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-            transliterateBtn.disabled = true;              // Make API call to server for transliteration processing
+            transliterateBtn.disabled = true;            // Get feature flags from advanced options
+            const contextAware = document.getElementById('context-aware-switch')?.checked ?? true;
+            const statisticalSchwa = document.getElementById('statistical-schwa-switch')?.checked ?? true;
+            const autoExceptions = document.getElementById('auto-exceptions-switch')?.checked ?? true;
+            const autoCapitalization = document.getElementById('auto-capitalization-switch')?.checked ?? true;
+            
+            // Make API call to server for transliteration processing
             // We use an absolute URL to avoid relative path issues
             fetch('http://127.0.0.1:5000/transliterate', {
                 method: 'POST',                // Using POST to send data to server
@@ -430,7 +436,11 @@
                 },
                 body: new URLSearchParams({    // Format parameters as form data
                     'input_text': text,        // Text to transliterate
-                    'language': inputLanguage.value  // Source language
+                    'language': inputLanguage.value,  // Source language
+                    'context_aware': contextAware.toString(),
+                    'statistical_schwa': statisticalSchwa.toString(),
+                    'auto_exceptions': autoExceptions.toString(),
+                    'auto_capitalization': autoCapitalization.toString()
                 })
             })
             .then(response => response.json())  // Parse JSON response
