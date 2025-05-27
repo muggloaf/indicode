@@ -273,6 +273,4 @@ def learn_from_corrections(original_texts, transliterated_texts, corrected_texts
     Returns:
         Dictionary of learned exceptions
     """
-    detector = ExceptionDetector(language)
-    corpus_pairs = list(zip(original_texts, transliterated_texts, corrected_texts))
-    return detector.batch_analyze(corpus_pairs)
+    

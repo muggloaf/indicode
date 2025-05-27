@@ -92,33 +92,28 @@
                             <div class="collapse mb-4" id="advancedOptions">
                                 <div class="card card-body">
                                     <h6 class="mb-3">Transliteration Features</h6>
-                                    <div class="row g-3">
+                                    <div class="row g-3">                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto-capitalization-switch" checked>
+                                                <label class="form-check-label" for="auto-capitalization-switch">Auto Capitalization</label>
+                                                <small class="d-block text-muted">Capitalizes sentences, names, and titles</small>
+                                            </div>
+                                            <input type="hidden" id="context-aware-switch" checked>
+                                        </div>
                                         <div class="col-md-6">
                                             <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="context-aware-switch" checked>
-                                                <label class="form-check-label" for="context-aware-switch">Context-Aware Transliteration</label>
-                                                <small class="d-block text-muted">Improves accuracy based on surrounding words</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">                                            <div class="form-check form-switch">
                                                 <input class="form-check-input" type="checkbox" id="statistical-schwa-switch" checked>
                                                 <label class="form-check-label" for="statistical-schwa-switch">Schwa Detection</label>
                                                 <small class="d-block text-muted">Intelligently removes inherent vowels</small>
-                                            </div></div>
+                                            </div>
+                                        </div>
                                         <div class="col-md-6">
                                             <div class="form-check form-switch">
                                                 <input class="form-check-input" type="checkbox" id="auto-exceptions-switch" checked>
                                                 <label class="form-check-label" for="auto-exceptions-switch">Automatic Exception Detection</label>
                                                 <small class="d-block text-muted">Identifies and handles special cases</small>
                                             </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="auto-capitalization-switch" checked>
-                                                <label class="form-check-label" for="auto-capitalization-switch">Auto Capitalization</label>
-                                                <small class="d-block text-muted">Capitalizes sentences, names, and titles</small>
-                                            </div>
-                                        </div>                                    </div>                                    <div class="mt-4" id="feedback-container" style="display: none; margin-top: 1.5rem !important;">
+                                        </div></div>                                    <div class="mt-4" id="feedback-container" style="display: none; margin-top: 1.5rem !important;">
                                         <h6 class="mb-2">Apply Edits to Your Transliteration</h6>
                                         <div class="feedback-form-wrapper">
                                             <label for="corrected-text" class="form-label">Your Improved Transliteration</label>
@@ -172,13 +167,12 @@
         
         <div class="row g-4 row-cols-1 row-cols-md-4">
             <div class="col">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body p-4 text-center">
+                <div class="card h-100 border-0 shadow-sm">                    <div class="card-body p-4 text-center">
                         <div class="feature-icon mb-3">
-                            <i class="fas fa-brain fa-2x text-primary"></i>
+                            <i class="fas fa-language fa-2x text-primary"></i>
                         </div>
-                        <h5 class="card-title fw-bold">Context-Aware</h5>
-                        <p class="card-text text-muted">Intelligently analyzes surrounding words to improve accuracy based on context.</p>
+                        <h5 class="card-title fw-bold">Multiple Language Support</h5>
+                        <p class="card-text text-muted">Works with both Hindi and Marathi languages with dedicated rule systems.</p>
                     </div>
                 </div>
             </div>

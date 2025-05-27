@@ -124,7 +124,7 @@ class EnhancedTransliterator:
                 if self.language == 'hindi':
                     transliterated = hindi2english(nukta_fixed_word)
                 else:  # marathi
-                    transliterated = marathi2english(nukta_fixed_word)            # Step 6: Apply statistical schwa deletion if enabled
+                    transliterated = marathi2english(nukta_fixed_word)      
             # Skip schwa deletion for words with nukta characters if they weren't handled by exceptions
             current_index = len(transliterated_words)
             

@@ -5,7 +5,6 @@ A sophisticated web application that transliterates Hindi and Marathi text to En
 ## Features
 
 - **Accurate Transliteration**: Convert Hindi and Marathi text to English while preserving pronunciation
-- **Context-aware Processing**: Analyzes surrounding words for improved accuracy
 - **Statistical Schwa Deletion**: Intelligently handles inherent vowels using linguistic rules
 - **Auto-Capitalization**: Properly capitalizes sentences, names, and titles
 - **Adaptive Learning**: Learns from user corrections to improve over time
