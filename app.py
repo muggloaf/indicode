@@ -23,7 +23,7 @@ from googletrans import Translator
 app = Flask(__name__)
 # Enable CORS with more explicit configuration
 CORS(app, resources={r"/*": {"origins": "*", "supports_credentials": True}})
-app.secret_key = 'your_super_secret_key_change_in_production'
+app.secret_key = 'ruby_chan-hiii-nani_ga_suki-chocominto_yori_mo_a_na_ta'
 
 # Ensure database directory exists
 db_path = os.path.join(os.path.dirname(__file__), 'database')
@@ -46,7 +46,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    name = db.Column(db.String(100))
+    name = db.Column(db.String(100), nullable = False)
     history = db.relationship('TransliterationHistory', backref='user', lazy=True)
 
 # Transliteration History Model
@@ -91,7 +91,7 @@ def utility_processor():
 
 # Email sending utility function
 def send_email(to_email, subject, message):
-    """Send email using The Group 11 API"""
+    """Send email using API"""
     try:
         # Build URL step by step for debugging
         base_url = "https://thegroup11.com/api/sendmail"
@@ -648,9 +648,12 @@ def submit_feedback():
                 corrections_count += 1
         
         db.session.commit()
-        
-        # Learn from this correction (continue saving to JSON files too)
+          # Learn from this correction (continue saving to JSON files too)
         exceptions = learn_from_corrections([original_text], [auto_transliteration], [corrected_transliteration], language)
+        
+        # Handle case where exceptions might be None
+        if exceptions is None:
+            exceptions = {}
         
         # Return success with the number of improvements learned
         return jsonify({

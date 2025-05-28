@@ -20,7 +20,6 @@ delete these inherent vowels, based on:
 - Word length and syllable structure
 - Known exceptions and special cases
 """
-
 import re
 
 #---------------------------------------------------------------
